@@ -1,0 +1,1828 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Emgu.CV.Structure;
+using Emgu.CV;
+
+namespace SS_OpenCV
+{
+    class ImageClass
+    {
+        public static void Negative(Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            dataPtr[0] = (byte)(255 - (int)blue);
+                            dataPtr[1] = (byte)(255 - (int)green);
+                            dataPtr[2] = (byte)(255 - (int)red);
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+            }
+        }
+
+        public static void ConvertToGray(Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte blue, green, red, gray;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            gray = (byte)Math.Round(((int)blue + green + red) / 3.0);
+
+                            dataPtr[0] = gray;
+                            dataPtr[1] = gray;
+                            dataPtr[2] = gray;
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+            }
+        }
+
+        public static void BlueChannel(Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte blue;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            dataPtr[1] = blue;
+                            dataPtr[2] = blue;
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+            }
+        }
+
+        public static void GreenChannel(Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer(); // Pointer to the image
+                byte green;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            green = dataPtr[1];
+                            dataPtr[0] = green;
+                            dataPtr[2] = green;
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+            }
+        }
+
+        public static void RedChannel(Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width; 
+                int x, y;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            red = dataPtr[2];
+                            dataPtr[0] = red;
+                            dataPtr[1] = red;
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+            }
+        }
+
+        public static void BrightContrast(Image<Bgr, byte> img, int bright, double contrast)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer(); // Pointer to the image
+                byte blue, green, red;
+                double newBlue, newGreen, newRed;
+
+                int width = img.Width;      
+                int height = img.Height;
+                int nChan = m.nChannels; // number of channels - 3
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            newBlue = bright + contrast * blue;
+                            newGreen = bright + contrast * green;
+                            newRed = bright + contrast * red;
+
+                            if (newBlue > 255) newBlue = 255;
+                            if (newGreen > 255) newGreen = 255;
+                            if (newRed > 255) newRed = 255;
+
+                            if (newBlue < 0) newBlue = 0;
+                            if (newGreen < 0) newGreen = 0;
+                            if (newRed < 0) newRed = 0;
+
+                            dataPtr[0] = (byte)Math.Round(newBlue);
+                            dataPtr[1] = (byte)Math.Round(newGreen);
+                            dataPtr[2] = (byte)Math.Round(newRed);
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+            }
+        }
+
+        public static void Translation(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, int dx, int dy)
+        {
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int x, y, xO, yO;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            xO = x - dx;
+                            yO = y - dy;
+
+                            if (xO < 0 || xO > width - 1 || yO < 0 || yO > height - 1)
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else
+                            {
+                                // absolute addressing
+                                blue = (byte)(dataPtrO + yO * ws + xO * nChan)[0];
+                                green = (byte)(dataPtrO + yO * ws + xO * nChan)[1];
+                                red = (byte)(dataPtrO + yO * ws + xO * nChan)[2];
+                            }
+
+                            (dataPtrD + y * ws + x * nChan)[0] = blue;
+                            (dataPtrD + y * ws + x * nChan)[1] = green;
+                            (dataPtrD + y * ws + x * nChan)[2] = red;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void Rotation(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, float angle)
+        {
+
+            unsafe
+            {
+
+                MIplImage mResult = img.MIplImage;
+                MIplImage mAux = imgCopy.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int x, y, xO, yO;
+
+                double xCenter = img.Width / 2.0;
+                double yCenter = img.Height / 2.0;
+                double cosAngle = Math.Cos(angle);
+                double sinAngle = Math.Sin(angle);
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            xO = (int)Math.Round((x - xCenter) * cosAngle - (yCenter - y) * sinAngle + xCenter);
+                            yO = (int)Math.Round(yCenter - (x - xCenter) * sinAngle - (yCenter - y) * cosAngle);
+
+                            if (xO < 0 || yO < 0 || xO >= width || yO >= height)
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else
+                            {
+                                // absolute address
+                                blue = (byte)(dataPtrO + yO * ws + xO * nChan)[0];
+                                green = (byte)(dataPtrO + yO * ws + xO * nChan)[1];
+                                red = (byte)(dataPtrO + yO * ws + xO * nChan)[2];
+                            }
+
+                            (dataPtrD + y * ws + x * nChan)[0] = blue;
+                            (dataPtrD + y * ws + x * nChan)[1] = green;
+                            (dataPtrD + y * ws + x * nChan)[2] = red;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void Scale(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, float scaleFactor)
+        {
+
+            unsafe
+            {
+
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int x, y, xO, yO;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            xO = (int)Math.Round(x / scaleFactor);
+                            yO = (int)Math.Round(y / scaleFactor);
+
+                            if (xO < 0 || yO < 0 || xO >= width || yO >= height)
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else
+                            {
+                                // absolute address
+                                blue = (byte)(dataPtrO + yO * ws + xO * nChan)[0];
+                                green = (byte)(dataPtrO + yO * ws + xO * nChan)[1];
+                                red = (byte)(dataPtrO + yO * ws + xO * nChan)[2];
+                            }
+
+                            (dataPtrD + y * ws + x * nChan)[0] = blue;
+                            (dataPtrD + y * ws + x * nChan)[1] = green;
+                            (dataPtrD + y * ws + x * nChan)[2] = red;
+                        }
+                    }
+                }
+            }
+        }
+        public static void Scale_point_xy(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, float scaleFactor, int xCenter, int yCenter)
+        {
+
+            unsafe
+            {
+
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image    
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int x, y, xO, yO;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            xO = (int)Math.Round((x - width / 2) / scaleFactor + xCenter);
+                            yO = (int)Math.Round((y - height / 2) / scaleFactor + yCenter);
+
+                            if (xO < 0 || yO < 0 || xO >= width || yO >= height)
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else
+                            {
+                                // absolute address
+                                blue = (byte)(dataPtrO + yO * ws + xO * nChan)[0];
+                                green = (byte)(dataPtrO + yO * ws + xO * nChan)[1];
+                                red = (byte)(dataPtrO + yO * ws + xO * nChan)[2];
+                            }
+
+                            (dataPtrD + y * ws + x * nChan)[0] = blue;
+                            (dataPtrD + y * ws + x * nChan)[1] = green;
+                            (dataPtrD + y * ws + x * nChan)[2] = red;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void Mean(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy)
+        {
+
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer();
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer();
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels;
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if (x == 0 && y == 0) //top left corner
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 4 + (dataPtrO + nChan)[0] * 2 + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 4 + (dataPtrO + nChan)[1] * 2 + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 4 + (dataPtrO + nChan)[2] * 2 + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2]) / 9.0));
+                            }
+                            else if (x == width - 1 && y == 0) //top right corner
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 4 + (dataPtrO - nChan)[0] * 2 + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws - nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 4 + (dataPtrO - nChan)[1] * 2 + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws - nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 4 + (dataPtrO - nChan)[2] * 2 + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws - nChan)[2]) / 9.0));
+                            }
+                            else if (x == 0 && y == height - 1) //bottom left corner
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 4 + (dataPtrO + nChan)[0] * 2 + (dataPtrO - ws)[0] * 2 + (dataPtrO - ws + nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 4 + (dataPtrO + nChan)[1] * 2 + (dataPtrO - ws)[1] * 2 + (dataPtrO - ws + nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 4 + (dataPtrO + nChan)[2] * 2 + (dataPtrO - ws)[2] * 2 + (dataPtrO - ws + nChan)[2]) / 9.0));
+                            }
+                            else if (x == width - 1 && y == height - 1) //bottom right corner
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 4 + (dataPtrO - nChan)[0] * 2 + (dataPtrO - ws)[0] * 2 + (dataPtrO - ws - nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 4 + (dataPtrO - nChan)[1] * 2 + (dataPtrO - ws)[1] * 2 + (dataPtrO - ws - nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 4 + (dataPtrO - nChan)[2] * 2 + (dataPtrO - ws)[2] * 2 + (dataPtrO - ws - nChan)[2]) / 9.0));
+                            }
+                            else if (y == 0) // top margin
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 2 + (dataPtrO - nChan)[0] * 2 + (dataPtrO + nChan)[0] * 2 + (dataPtrO + ws - nChan)[0] + (dataPtrO + ws)[0] + (dataPtrO + ws + nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 2 + (dataPtrO - nChan)[1] * 2 + (dataPtrO + nChan)[1] * 2 + (dataPtrO + ws - nChan)[1] + (dataPtrO + ws)[1] + (dataPtrO + ws + nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 2 + (dataPtrO - nChan)[2] * 2 + (dataPtrO + nChan)[2] * 2 + (dataPtrO + ws - nChan)[2] + (dataPtrO + ws)[2] + (dataPtrO + ws + nChan)[2]) / 9.0));
+                            }
+                            else if (y == height - 1) // bottom margin
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 2 + (dataPtrO - nChan)[0] * 2 + (dataPtrO + nChan)[0] * 2 + (dataPtrO - ws - nChan)[0] + (dataPtrO - ws)[0] + (dataPtrO - ws + nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 2 + (dataPtrO - nChan)[1] * 2 + (dataPtrO + nChan)[1] * 2 + (dataPtrO - ws - nChan)[1] + (dataPtrO - ws)[1] + (dataPtrO - ws + nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 2 + (dataPtrO - nChan)[2] * 2 + (dataPtrO + nChan)[2] * 2 + (dataPtrO - ws - nChan)[2] + (dataPtrO - ws)[2] + (dataPtrO - ws + nChan)[2]) / 9.0));
+                            }
+                            else if (x == 0) // left margin
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 2 + (dataPtrO - ws)[0] * 2 + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0] + (dataPtrO + nChan)[0] + (dataPtrO - ws + nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 2 + (dataPtrO - ws)[1] * 2 + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1] + (dataPtrO + nChan)[1] + (dataPtrO - ws + nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 2 + (dataPtrO - ws)[2] * 2 + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2] + (dataPtrO + nChan)[2] + (dataPtrO - ws + nChan)[2]) / 9.0));
+                            }
+                            else if (x == width - 1) //right margin
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)dataPtrO[0] * 2 + (dataPtrO - ws)[0] * 2 + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws - nChan)[0] + (dataPtrO - nChan)[0] + (dataPtrO - ws - nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)dataPtrO[1] * 2 + (dataPtrO - ws)[1] * 2 + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws - nChan)[1] + (dataPtrO - nChan)[1] + (dataPtrO - ws - nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)dataPtrO[2] * 2 + (dataPtrO - ws)[2] * 2 + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws - nChan)[2] + (dataPtrO - nChan)[2] + (dataPtrO - ws - nChan)[2]) / 9.0));
+                            }
+                            else //center pixels
+                            {
+                                dataPtrD[0] = (byte)(Math.Round(((int)(dataPtrO - ws - nChan)[0] + (dataPtrO - ws)[0] + (dataPtrO - ws + nChan)[0] + (dataPtrO - nChan)[0] + dataPtrO[0] + (dataPtrO + nChan)[0] + (dataPtrO + ws - nChan)[0] + (dataPtrO + ws)[0] + (dataPtrO + ws + nChan)[0]) / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(((int)(dataPtrO - ws - nChan)[1] + (dataPtrO - ws)[1] + (dataPtrO - ws + nChan)[1] + (dataPtrO - nChan)[1] + dataPtrO[1] + (dataPtrO + nChan)[1] + (dataPtrO + ws - nChan)[1] + (dataPtrO + ws)[1] + (dataPtrO + ws + nChan)[1]) / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(((int)(dataPtrO - ws - nChan)[2] + (dataPtrO - ws)[2] + (dataPtrO - ws + nChan)[2] + (dataPtrO - nChan)[2] + dataPtrO[2] + (dataPtrO + nChan)[2] + (dataPtrO + ws - nChan)[2] + (dataPtrO + ws)[2] + (dataPtrO + ws + nChan)[2]) / 9.0));
+                            }
+
+                            dataPtrO += nChan;
+                            dataPtrD += nChan;
+                        }
+
+                        dataPtrO += padding;
+                        dataPtrD += padding;
+                    }
+                }
+            }
+        }
+
+        public static void NonUniform(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, float[,] matrix, float matrixWeight)
+        {
+
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer();
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer();
+
+                double blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels;
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if (x == 0 && y == 0) //top left corner
+                            {
+                                blue = Math.Round(((int)(dataPtrO[0] * matrix[0, 0]) + dataPtrO[0] * matrix[0, 1] + (dataPtrO + nChan)[0] * matrix[0, 2] + dataPtrO[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + (dataPtrO + nChan)[0] * matrix[1, 2] + (dataPtrO + ws)[0] * matrix[2, 0] + (dataPtrO + ws)[0] * matrix[2, 1] + (dataPtrO + ws + nChan)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)(dataPtrO[1] * matrix[0, 0]) + dataPtrO[1] * matrix[0, 1] + (dataPtrO + nChan)[1] * matrix[0, 2] + dataPtrO[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + (dataPtrO + nChan)[1] * matrix[1, 2] + (dataPtrO + ws)[1] * matrix[2, 0] + (dataPtrO + ws)[1] * matrix[2, 1] + (dataPtrO + ws + nChan)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)(dataPtrO[2] * matrix[0, 0]) + dataPtrO[2] * matrix[0, 1] + (dataPtrO + nChan)[2] * matrix[0, 2] + dataPtrO[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + (dataPtrO + nChan)[2] * matrix[1, 2] + (dataPtrO + ws)[2] * matrix[2, 0] + (dataPtrO + ws)[2] * matrix[2, 1] + (dataPtrO + ws + nChan)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else if (x == width - 1 && y == 0) //top right corner
+                            {
+                                blue = Math.Round(((int)((dataPtrO - nChan)[0] * matrix[0, 0]) + dataPtrO[0] * matrix[0, 1] + dataPtrO[0] * matrix[0, 2] + (dataPtrO - nChan)[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + dataPtrO[0] * matrix[1, 2] + (dataPtrO + ws - nChan)[0] * matrix[2, 0] + (dataPtrO + ws)[0] * matrix[2, 1] + (dataPtrO + ws)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - nChan)[1] * matrix[0, 0]) + dataPtrO[1] * matrix[0, 1] + dataPtrO[1] * matrix[0, 2] + (dataPtrO - nChan)[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + dataPtrO[1] * matrix[1, 2] + (dataPtrO + ws - nChan)[1] * matrix[2, 0] + (dataPtrO + ws)[1] * matrix[2, 1] + (dataPtrO + ws)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - nChan)[2] * matrix[0, 0]) + dataPtrO[2] * matrix[0, 1] + dataPtrO[2] * matrix[0, 2] + (dataPtrO - nChan)[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + dataPtrO[2] * matrix[1, 2] + (dataPtrO + ws - nChan)[2] * matrix[2, 0] + (dataPtrO + ws)[2] * matrix[2, 1] + (dataPtrO + ws)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else if (x == 0 && y == height - 1) //bottom left corner
+                            {
+                                blue = Math.Round(((int)((dataPtrO - ws)[0] * matrix[0, 0]) + (dataPtrO - ws)[0] * matrix[0, 1] + (dataPtrO - ws + nChan)[0] * matrix[0, 2] + dataPtrO[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + (dataPtrO + nChan)[0] * matrix[1, 2] + dataPtrO[0] * matrix[2, 0] + dataPtrO[0] * matrix[2, 1] + (dataPtrO + nChan)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - ws)[1] * matrix[0, 0]) + (dataPtrO - ws)[1] * matrix[0, 1] + (dataPtrO - ws + nChan)[1] * matrix[0, 2] + dataPtrO[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + (dataPtrO + nChan)[1] * matrix[1, 2] + dataPtrO[1] * matrix[2, 0] + dataPtrO[1] * matrix[2, 1] + (dataPtrO + nChan)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - ws)[2] * matrix[0, 0]) + (dataPtrO - ws)[2] * matrix[0, 1] + (dataPtrO - ws + nChan)[2] * matrix[0, 2] + dataPtrO[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + (dataPtrO + nChan)[2] * matrix[1, 2] + dataPtrO[2] * matrix[2, 0] + dataPtrO[2] * matrix[2, 1] + (dataPtrO + nChan)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else if (x == width - 1 && y == height - 1) //bottom right corner
+                            {
+                                blue = Math.Round(((int)((dataPtrO - ws - nChan)[0] * matrix[0, 0]) + (dataPtrO - ws)[0] * matrix[0, 1] + (dataPtrO - ws)[0] * matrix[0, 2] + (dataPtrO - nChan)[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + dataPtrO[0] * matrix[1, 2] + (dataPtrO - nChan)[0] * matrix[2, 0] + dataPtrO[0] * matrix[2, 1] + dataPtrO[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - ws - nChan)[1] * matrix[0, 0]) + (dataPtrO - ws)[1] * matrix[0, 1] + (dataPtrO - ws)[1] * matrix[0, 2] + (dataPtrO - nChan)[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + dataPtrO[1] * matrix[1, 2] + (dataPtrO - nChan)[1] * matrix[2, 0] + dataPtrO[1] * matrix[2, 1] + dataPtrO[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - ws - nChan)[2] * matrix[0, 0]) + (dataPtrO - ws)[2] * matrix[0, 1] + (dataPtrO - ws)[2] * matrix[0, 2] + (dataPtrO - nChan)[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + dataPtrO[2] * matrix[1, 2] + (dataPtrO - nChan)[2] * matrix[2, 0] + dataPtrO[2] * matrix[2, 1] + dataPtrO[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else if (y == 0) // top margin
+                            {
+                                blue = Math.Round(((int)((dataPtrO - nChan)[0] * matrix[0, 0]) + dataPtrO[0] * matrix[0, 1] + (dataPtrO + nChan)[0] * matrix[0, 2] + (dataPtrO - nChan)[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + (dataPtrO + nChan)[0] * matrix[1, 2] + (dataPtrO + ws - nChan)[0] * matrix[2, 0] + (dataPtrO + ws)[0] * matrix[2, 1] + (dataPtrO + ws + nChan)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - nChan)[1] * matrix[0, 0]) + dataPtrO[1] * matrix[0, 1] + (dataPtrO + nChan)[1] * matrix[0, 2] + (dataPtrO - nChan)[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + (dataPtrO + nChan)[1] * matrix[1, 2] + (dataPtrO + ws - nChan)[1] * matrix[2, 0] + (dataPtrO + ws)[1] * matrix[2, 1] + (dataPtrO + ws + nChan)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - nChan)[2] * matrix[0, 0]) + dataPtrO[2] * matrix[0, 1] + (dataPtrO + nChan)[2] * matrix[0, 2] + (dataPtrO - nChan)[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + (dataPtrO + nChan)[2] * matrix[1, 2] + (dataPtrO + ws - nChan)[2] * matrix[2, 0] + (dataPtrO + ws)[2] * matrix[2, 1] + (dataPtrO + ws + nChan)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else if (y == height - 1) // bottom margin
+                            {
+                                blue = Math.Round(((int)((dataPtrO - ws - nChan)[0] * matrix[0, 0]) + (dataPtrO - ws)[0] * matrix[0, 1] + (dataPtrO - ws + nChan)[0] * matrix[0, 2] + (dataPtrO - nChan)[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + dataPtrO[0] * matrix[1, 2] + (dataPtrO - nChan)[0] * matrix[2, 0] + dataPtrO[0] * matrix[2, 1] + (dataPtrO + nChan)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - ws - nChan)[1] * matrix[0, 0]) + (dataPtrO - ws)[1] * matrix[0, 1] + (dataPtrO - ws + nChan)[1] * matrix[0, 2] + (dataPtrO - nChan)[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + dataPtrO[1] * matrix[1, 2] + (dataPtrO - nChan)[1] * matrix[2, 0] + dataPtrO[1] * matrix[2, 1] + (dataPtrO + nChan)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - ws - nChan)[2] * matrix[0, 0]) + (dataPtrO - ws)[2] * matrix[0, 1] + (dataPtrO - ws + nChan)[2] * matrix[0, 2] + (dataPtrO - nChan)[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + dataPtrO[2] * matrix[1, 2] + (dataPtrO - nChan)[2] * matrix[2, 0] + dataPtrO[2] * matrix[2, 1] + (dataPtrO + nChan)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else if (x == 0) // left margin
+                            {
+                                blue = Math.Round(((int)((dataPtrO - ws)[0] * matrix[0, 0]) + (dataPtrO - ws)[0] * matrix[0, 1] + (dataPtrO - ws + nChan)[0] * matrix[0, 2] + dataPtrO[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + (dataPtrO + nChan)[0] * matrix[1, 2] + (dataPtrO + ws)[0] * matrix[2, 0] + (dataPtrO + ws)[0] * matrix[2, 1] + (dataPtrO + ws + nChan)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - ws)[1] * matrix[0, 0]) + (dataPtrO - ws)[1] * matrix[0, 1] + (dataPtrO - ws + nChan)[1] * matrix[0, 2] + dataPtrO[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + (dataPtrO + nChan)[1] * matrix[1, 2] + (dataPtrO + ws)[1] * matrix[2, 0] + (dataPtrO + ws)[1] * matrix[2, 1] + (dataPtrO + ws + nChan)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - ws)[2] * matrix[0, 0]) + (dataPtrO - ws)[2] * matrix[0, 1] + (dataPtrO - ws + nChan)[2] * matrix[0, 2] + dataPtrO[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + (dataPtrO + nChan)[2] * matrix[1, 2] + (dataPtrO + ws)[2] * matrix[2, 0] + (dataPtrO + ws)[2] * matrix[2, 1] + (dataPtrO + ws + nChan)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else if (x == width - 1) //right margin
+                            {
+                                blue = Math.Round(((int)((dataPtrO - ws - nChan)[0] * matrix[0, 0]) + (dataPtrO - ws)[0] * matrix[0, 1] + (dataPtrO - ws)[0] * matrix[0, 2] + (dataPtrO - nChan)[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + dataPtrO[0] * matrix[1, 2] + (dataPtrO + ws - nChan)[0] * matrix[2, 0] + (dataPtrO + ws)[0] * matrix[2, 1] + (dataPtrO + ws)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - ws - nChan)[1] * matrix[0, 0]) + (dataPtrO - ws)[1] * matrix[0, 1] + (dataPtrO - ws)[1] * matrix[0, 2] + (dataPtrO - nChan)[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + dataPtrO[1] * matrix[1, 2] + (dataPtrO + ws - nChan)[1] * matrix[2, 0] + (dataPtrO + ws)[1] * matrix[2, 1] + (dataPtrO + ws)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - ws - nChan)[2] * matrix[0, 0]) + (dataPtrO - ws)[2] * matrix[0, 1] + (dataPtrO - ws)[2] * matrix[0, 2] + (dataPtrO - nChan)[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + dataPtrO[2] * matrix[1, 2] + (dataPtrO + ws - nChan)[2] * matrix[2, 0] + (dataPtrO + ws)[2] * matrix[2, 1] + (dataPtrO + ws)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+                            else //center pixels
+                            {
+                                blue = Math.Round(((int)((dataPtrO - ws - nChan)[0] * matrix[0, 0]) + (dataPtrO - ws)[0] * matrix[0, 1] + (dataPtrO - ws + nChan)[0] * matrix[0, 2] + (dataPtrO - nChan)[0] * matrix[1, 0] + dataPtrO[0] * matrix[1, 1] + (dataPtrO + nChan)[0] * matrix[1, 2] + (dataPtrO + ws - nChan)[0] * matrix[2, 0] + (dataPtrO + ws)[0] * matrix[2, 1] + (dataPtrO + ws + nChan)[0] * matrix[2, 2]) / matrixWeight);
+                                green = Math.Round(((int)((dataPtrO - ws - nChan)[1] * matrix[0, 0]) + (dataPtrO - ws)[1] * matrix[0, 1] + (dataPtrO - ws + nChan)[1] * matrix[0, 2] + (dataPtrO - nChan)[1] * matrix[1, 0] + dataPtrO[1] * matrix[1, 1] + (dataPtrO + nChan)[1] * matrix[1, 2] + (dataPtrO + ws - nChan)[1] * matrix[2, 0] + (dataPtrO + ws)[1] * matrix[2, 1] + (dataPtrO + ws + nChan)[1] * matrix[2, 2]) / matrixWeight);
+                                red = Math.Round(((int)((dataPtrO - ws - nChan)[2] * matrix[0, 0]) + (dataPtrO - ws)[2] * matrix[0, 1] + (dataPtrO - ws + nChan)[2] * matrix[0, 2] + (dataPtrO - nChan)[2] * matrix[1, 0] + dataPtrO[2] * matrix[1, 1] + (dataPtrO + nChan)[2] * matrix[1, 2] + (dataPtrO + ws - nChan)[2] * matrix[2, 0] + (dataPtrO + ws)[2] * matrix[2, 1] + (dataPtrO + ws + nChan)[2] * matrix[2, 2]) / matrixWeight);
+                            }
+
+                            if (blue > 255) blue = 255;
+                            if (green > 255) green = 255;
+                            if (red > 255) red = 255;
+
+                            if (blue < 0) blue = 0;
+                            if (green < 0) green = 0;
+                            if (red < 0) red = 0;
+
+                            dataPtrD[0] = (byte)blue;
+                            dataPtrD[1] = (byte)green;
+                            dataPtrD[2] = (byte)red;
+
+                            dataPtrO += nChan;
+                            dataPtrD += nChan;
+                        }
+
+                        dataPtrO += padding;
+                        dataPtrD += padding;
+                    }
+                }
+            }
+        }
+        public static void Sobel(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy)
+        {
+
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer();
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer();
+
+                double blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels;
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if (x == 0 && y == 0) //top left corner
+                            {
+                                blue = Math.Round((double)Math.Abs(dataPtrO[0] + dataPtrO[0] * 2 + (dataPtrO + ws)[0] - (dataPtrO + nChan)[0] - (dataPtrO + nChan)[0] * 2 - (dataPtrO + ws + nChan)[0]) + Math.Abs((dataPtrO + ws)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0] - dataPtrO[0] - dataPtrO[0] * 2 - (dataPtrO + nChan)[0]));
+                                green = Math.Round((double)Math.Abs(dataPtrO[1] + dataPtrO[1] * 2 + (dataPtrO + ws)[1] - (dataPtrO + nChan)[1] - (dataPtrO + nChan)[1] * 2 - (dataPtrO + ws + nChan)[1]) + Math.Abs((dataPtrO + ws)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1] - dataPtrO[1] - dataPtrO[1] * 2 - (dataPtrO + nChan)[1]));
+                                red = Math.Round((double)Math.Abs(dataPtrO[2] + dataPtrO[2] * 2 + (dataPtrO + ws)[2] - (dataPtrO + nChan)[2] - (dataPtrO + nChan)[2] * 2 - (dataPtrO + ws + nChan)[2]) + Math.Abs((dataPtrO + ws)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2] - dataPtrO[2] - dataPtrO[2] * 2 - (dataPtrO + nChan)[2]));
+                            }
+                            else if (x == width - 1 && y == 0) //top right corner
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - nChan)[0] + (dataPtrO - nChan)[0] * 2 + (dataPtrO + ws - nChan)[0] - dataPtrO[0] - dataPtrO[0] * 2 - (dataPtrO + ws)[0]) + Math.Abs((dataPtrO + ws - nChan)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws)[0] - (dataPtrO - nChan)[0] - dataPtrO[0] * 2 - dataPtrO[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - nChan)[1] + (dataPtrO - nChan)[1] * 2 + (dataPtrO + ws - nChan)[1] - dataPtrO[1] - dataPtrO[1] * 2 - (dataPtrO + ws)[1]) + Math.Abs((dataPtrO + ws - nChan)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws)[1] - (dataPtrO - nChan)[1] - dataPtrO[1] * 2 - dataPtrO[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - nChan)[2] + (dataPtrO - nChan)[2] * 2 + (dataPtrO + ws - nChan)[2] - dataPtrO[2] - dataPtrO[2] * 2 - (dataPtrO + ws)[2]) + Math.Abs((dataPtrO + ws - nChan)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws)[2] - (dataPtrO - nChan)[2] - dataPtrO[2] * 2 - dataPtrO[2]));
+                            }
+                            else if (x == 0 && y == height - 1) //bottom left corner
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - ws)[0] + dataPtrO[0] * 2 + dataPtrO[0] - (dataPtrO + nChan - ws)[0] - (dataPtrO + nChan)[0] * 2 - (dataPtrO + nChan)[0]) + Math.Abs(dataPtrO[0] + dataPtrO[0] * 2 + (dataPtrO + nChan)[0] - (dataPtrO - ws)[0] - (dataPtrO - ws)[0] * 2 - (dataPtrO - ws + nChan)[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - ws)[1] + dataPtrO[1] * 2 + dataPtrO[1] - (dataPtrO + nChan - ws)[1] - (dataPtrO + nChan)[1] * 2 - (dataPtrO + nChan)[1]) + Math.Abs(dataPtrO[1] + dataPtrO[1] * 2 + (dataPtrO + nChan)[1] - (dataPtrO - ws)[1] - (dataPtrO - ws)[1] * 2 - (dataPtrO - ws + nChan)[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - ws)[2] + dataPtrO[2] * 2 + dataPtrO[2] - (dataPtrO + nChan - ws)[2] - (dataPtrO + nChan)[2] * 2 - (dataPtrO + nChan)[2]) + Math.Abs(dataPtrO[2] + dataPtrO[2] * 2 + (dataPtrO + nChan)[2] - (dataPtrO - ws)[2] - (dataPtrO - ws)[2] * 2 - (dataPtrO - ws + nChan)[2]));
+                            }
+                            else if (x == width - 1 && y == height - 1) //bottom right corner
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[0] + (dataPtrO - nChan)[0] * 2 + (dataPtrO - nChan)[0] - (dataPtrO - ws)[0] - dataPtrO[0] * 2 - dataPtrO[0]) + Math.Abs((dataPtrO - nChan)[0] + dataPtrO[0] * 2 + dataPtrO[0] - (dataPtrO - ws - nChan)[0] - (dataPtrO - ws)[0] * 2 - (dataPtrO - ws)[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[1] + (dataPtrO - nChan)[1] * 2 + (dataPtrO - nChan)[1] - (dataPtrO - ws)[1] - dataPtrO[1] * 2 - dataPtrO[1]) + Math.Abs((dataPtrO - nChan)[1] + dataPtrO[1] * 2 + dataPtrO[1] - (dataPtrO - ws - nChan)[1] - (dataPtrO - ws)[1] * 2 - (dataPtrO - ws)[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[2] + (dataPtrO - nChan)[2] * 2 + (dataPtrO - nChan)[2] - (dataPtrO - ws)[2] - dataPtrO[2] * 2 - dataPtrO[2]) + Math.Abs((dataPtrO - nChan)[2] + dataPtrO[2] * 2 + dataPtrO[2] - (dataPtrO - ws - nChan)[2] - (dataPtrO - ws)[2] * 2 - (dataPtrO - ws)[2]));
+                            }
+                            else if (y == 0) // top margin
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - nChan)[0] + (dataPtrO - nChan)[0] * 2 + (dataPtrO + ws - nChan)[0] - (dataPtrO + nChan)[0] - (dataPtrO + nChan)[0] * 2 - (dataPtrO + ws + nChan)[0]) + Math.Abs((dataPtrO + ws - nChan)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0] - (dataPtrO - nChan)[0] - dataPtrO[0] * 2 - (dataPtrO + nChan)[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - nChan)[1] + (dataPtrO - nChan)[1] * 2 + (dataPtrO + ws - nChan)[1] - (dataPtrO + nChan)[1] - (dataPtrO + nChan)[1] * 2 - (dataPtrO + ws + nChan)[1]) + Math.Abs((dataPtrO + ws - nChan)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1] - (dataPtrO - nChan)[1] - dataPtrO[1] * 2 - (dataPtrO + nChan)[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - nChan)[2] + (dataPtrO - nChan)[2] * 2 + (dataPtrO + ws - nChan)[2] - (dataPtrO + nChan)[2] - (dataPtrO + nChan)[2] * 2 - (dataPtrO + ws + nChan)[2]) + Math.Abs((dataPtrO + ws - nChan)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2] - (dataPtrO - nChan)[2] - dataPtrO[2] * 2 - (dataPtrO + nChan)[2]));
+                            }
+                            else if (y == height - 1) // bottom margin
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[0] + (dataPtrO - nChan)[0] * 2 + (dataPtrO - nChan)[0] - (dataPtrO + nChan - ws)[0] - (dataPtrO + nChan)[0] * 2 - (dataPtrO + nChan)[0]) + Math.Abs((dataPtrO - nChan)[0] + dataPtrO[0] * 2 + (dataPtrO + nChan)[0] - (dataPtrO - ws - nChan)[0] - (dataPtrO - ws)[0] * 2 - (dataPtrO - ws + nChan)[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[1] + (dataPtrO - nChan)[1] * 2 + (dataPtrO - nChan)[1] - (dataPtrO + nChan - ws)[1] - (dataPtrO + nChan)[1] * 2 - (dataPtrO + nChan)[1]) + Math.Abs((dataPtrO - nChan)[1] + dataPtrO[1] * 2 + (dataPtrO + nChan)[1] - (dataPtrO - ws - nChan)[1] - (dataPtrO - ws)[1] * 2 - (dataPtrO - ws + nChan)[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[2] + (dataPtrO - nChan)[2] * 2 + (dataPtrO - nChan)[2] - (dataPtrO + nChan - ws)[2] - (dataPtrO + nChan)[2] * 2 - (dataPtrO + nChan)[2]) + Math.Abs((dataPtrO - nChan)[2] + dataPtrO[2] * 2 + (dataPtrO + nChan)[2] - (dataPtrO - ws - nChan)[2] - (dataPtrO - ws)[2] * 2 - (dataPtrO - ws + nChan)[2]));
+                            }
+                            else if (x == 0) // left margin
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - ws)[0] + dataPtrO[0] * 2 + (dataPtrO + ws)[0] - (dataPtrO + nChan - ws)[0] - (dataPtrO + nChan)[0] * 2 - (dataPtrO + ws + nChan)[0]) + Math.Abs((dataPtrO + ws)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0] - (dataPtrO - ws)[0] - (dataPtrO - ws)[0] * 2 - (dataPtrO - ws + nChan)[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - ws)[1] + dataPtrO[1] * 2 + (dataPtrO + ws)[1] - (dataPtrO + nChan - ws)[1] - (dataPtrO + nChan)[1] * 2 - (dataPtrO + ws + nChan)[1]) + Math.Abs((dataPtrO + ws)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1] - (dataPtrO - ws)[1] - (dataPtrO - ws)[1] * 2 - (dataPtrO - ws + nChan)[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - ws)[2] + dataPtrO[2] * 2 + (dataPtrO + ws)[2] - (dataPtrO + nChan - ws)[2] - (dataPtrO + nChan)[2] * 2 - (dataPtrO + ws + nChan)[2]) + Math.Abs((dataPtrO + ws)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2] - (dataPtrO - ws)[2] - (dataPtrO - ws)[2] * 2 - (dataPtrO - ws + nChan)[2]));
+                            }
+                            else if (x == width - 1) //right margin
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[0] + (dataPtrO - nChan)[0] * 2 + (dataPtrO + ws - nChan)[0] - (dataPtrO - ws)[0] - dataPtrO[0] * 2 - (dataPtrO + ws)[0]) + Math.Abs((dataPtrO + ws - nChan)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws)[0] - (dataPtrO - ws - nChan)[0] - (dataPtrO - ws)[0] * 2 - (dataPtrO - ws)[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[1] + (dataPtrO - nChan)[1] * 2 + (dataPtrO + ws - nChan)[1] - (dataPtrO - ws)[1] - dataPtrO[1] * 2 - (dataPtrO + ws)[1]) + Math.Abs((dataPtrO + ws - nChan)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws)[1] - (dataPtrO - ws - nChan)[1] - (dataPtrO - ws)[1] * 2 - (dataPtrO - ws)[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[2] + (dataPtrO - nChan)[2] * 2 + (dataPtrO + ws - nChan)[2] - (dataPtrO - ws)[2] - dataPtrO[2] * 2 - (dataPtrO + ws)[2]) + Math.Abs((dataPtrO + ws - nChan)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws)[2] - (dataPtrO - ws - nChan)[2] - (dataPtrO - ws)[2] * 2 - (dataPtrO - ws)[2]));
+                            }
+                            else //center pixels
+                            {
+                                blue = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[0] + (dataPtrO - nChan)[0] * 2 + (dataPtrO + ws - nChan)[0] - (dataPtrO + nChan - ws)[0] - (dataPtrO + nChan)[0] * 2 - (dataPtrO + ws + nChan)[0]) + Math.Abs((dataPtrO + ws - nChan)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0] - (dataPtrO - ws - nChan)[0] - (dataPtrO - ws)[0] * 2 - (dataPtrO - ws + nChan)[0]));
+                                green = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[1] + (dataPtrO - nChan)[1] * 2 + (dataPtrO + ws - nChan)[1] - (dataPtrO + nChan - ws)[1] - (dataPtrO + nChan)[1] * 2 - (dataPtrO + ws + nChan)[1]) + Math.Abs((dataPtrO + ws - nChan)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1] - (dataPtrO - ws - nChan)[1] - (dataPtrO - ws)[1] * 2 - (dataPtrO - ws + nChan)[1]));
+                                red = Math.Round((double)Math.Abs((dataPtrO - ws - nChan)[2] + (dataPtrO - nChan)[2] * 2 + (dataPtrO + ws - nChan)[2] - (dataPtrO + nChan - ws)[2] - (dataPtrO + nChan)[2] * 2 - (dataPtrO + ws + nChan)[2]) + Math.Abs((dataPtrO + ws - nChan)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2] - (dataPtrO - ws - nChan)[2] - (dataPtrO - ws)[2] * 2 - (dataPtrO - ws + nChan)[2]));
+
+                            }
+
+                            if (blue > 255) blue = 255;
+                            if (green > 255) green = 255;
+                            if (red > 255) red = 255;
+
+                            dataPtrD[0] = (byte)(blue);
+                            dataPtrD[1] = (byte)(green);
+                            dataPtrD[2] = (byte)(red);
+
+                            dataPtrO += nChan;
+                            dataPtrD += nChan;
+                        }
+
+                        dataPtrO += padding;
+                        dataPtrD += padding;
+                    }
+                }
+            }
+        }
+        public static void Roberts(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy)
+        {
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer();
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer();
+
+                int blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels;
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if (x == width - 1 && y == height - 1) //bottom right corner
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else if (y == height - 1) // bottom left corner and bottom margin
+                            {
+                                blue = 2 * Math.Abs((int)dataPtrO[0] - (dataPtrO + nChan)[0]);
+                                green = 2 * Math.Abs((int)dataPtrO[1] - (dataPtrO + nChan)[1]);
+                                red = 2 * Math.Abs((int)dataPtrO[2] - (dataPtrO + nChan)[2]);
+                            }
+                            else if (x == width - 1) //top right corner and right margin
+                            {
+                                blue = 2 * Math.Abs((int)dataPtrO[0] - (dataPtrO + ws)[0]);
+                                green = 2 * Math.Abs((int)dataPtrO[1] - (dataPtrO + ws)[1]);
+                                red = 2 * Math.Abs((int)dataPtrO[2] - (dataPtrO + ws)[2]);
+                            }
+                            else //top left corner, left margin, top margin and center pixels
+                            {
+                                blue = Math.Abs((int)dataPtrO[0] - (dataPtrO + nChan + ws)[0]) + Math.Abs((int)(dataPtrO + nChan)[0] - (dataPtrO + ws)[0]);
+                                green = Math.Abs((int)dataPtrO[1] - (dataPtrO + nChan + ws)[1]) + Math.Abs((int)(dataPtrO + nChan)[1] - (dataPtrO + ws)[1]);
+                                red = Math.Abs((int)dataPtrO[2] - (dataPtrO + nChan + ws)[2]) + Math.Abs((int)(dataPtrO + nChan)[2] - (dataPtrO + ws)[2]);
+                            }
+
+                            if (blue > 255) blue = 255;
+                            if (green > 255) green = 255;
+                            if (red > 255) red = 255;
+
+                            dataPtrD[0] = (byte)(blue);
+                            dataPtrD[1] = (byte)(green);
+                            dataPtrD[2] = (byte)(red);
+
+                            dataPtrO += nChan;
+                            dataPtrD += nChan;
+                        }
+
+                        dataPtrO += padding;
+                        dataPtrD += padding;
+                    }
+                }
+            }
+        }
+        public static void Diferentiation(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy)
+        {
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+
+                int blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w; // alinhament bytes (padding)
+                int x, y;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if (x == width - 1 && y == height - 1) //bottom right corner
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else if (y == height - 1) // bottom left corner and bottom margin
+                            {
+                                blue = Math.Abs((int)dataPtrO[0] - (dataPtrO + nChan)[0]);
+                                green = Math.Abs((int)dataPtrO[1] - (dataPtrO + nChan)[1]);
+                                red = Math.Abs((int)dataPtrO[2] - (dataPtrO + nChan)[2]);
+                            }
+                            else if (x == width - 1) //top right corner and right margin
+                            {
+                                blue = Math.Abs((int)dataPtrO[0] - (dataPtrO + ws)[0]);
+                                green = Math.Abs((int)dataPtrO[1] - (dataPtrO + ws)[1]);
+                                red = Math.Abs((int)dataPtrO[2] - (dataPtrO + ws)[2]);
+                            }
+                            else //top left, left margin, top margin and center pixels
+                            {
+                                blue = Math.Abs((int)dataPtrO[0] - (dataPtrO + nChan)[0]) + Math.Abs((int)dataPtrO[0] - (dataPtrO + ws)[0]);
+                                green = Math.Abs((int)dataPtrO[1] - (dataPtrO + nChan)[1]) + Math.Abs((int)dataPtrO[1] - (dataPtrO + ws)[1]);
+                                red = Math.Abs((int)dataPtrO[2] - (dataPtrO + nChan)[2]) + Math.Abs((int)dataPtrO[2] - (dataPtrO + ws)[2]);
+                            }
+
+                            if (blue > 255)
+                                blue = 255;
+                            if (green > 255)
+                                green = 255;
+                            if (red > 255)
+                                red = 255;
+
+                            dataPtrD[0] = (byte)(blue);
+                            dataPtrD[1] = (byte)(green);
+                            dataPtrD[2] = (byte)(red);
+
+                            dataPtrO += nChan;
+                            dataPtrD += nChan;
+                        }
+
+                        dataPtrO += padding;
+                        dataPtrD += padding;
+                    }
+                }
+            }
+        }
+        public static void Median(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy)
+        {
+            imgCopy.SmoothMedian(3).CopyTo(img);
+        }
+
+        public static int[] Histogram_Gray(Emgu.CV.Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte blue, green, red, gray;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                int[] intensity = new int[256];
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            gray = (byte)Math.Round(((int)blue + green + red) / 3.0);
+
+                            intensity[gray]++;
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+
+                return intensity;
+            }
+        }
+
+        public static int[,] Histogram_RGB(Emgu.CV.Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                int[,] intensity = new int[3, 256];
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            intensity[0, blue]++;
+                            intensity[1, green]++;
+                            intensity[2, red]++;
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+
+                return intensity;
+            }
+        }
+
+        public static int[,] Histogram_All(Emgu.CV.Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte blue, green, red, gray;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                int[,] intensity = new int[4, 256];
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            gray = (byte)Math.Round(((int)blue + green + red) / 3.0);
+
+                            intensity[0, gray]++;
+                            intensity[1, blue]++;
+                            intensity[2, green]++;
+                            intensity[3, red]++;
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+
+                return intensity;
+            }
+        }
+
+        public static void ConvertToBW(Emgu.CV.Image<Bgr, byte> img, int threshold)
+        {
+            unsafe
+            {
+                MIplImage m = img.MIplImage;
+                byte* dataPtr = (byte*)m.imageData.ToPointer();
+                byte blue, green, red, gray;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = m.nChannels;
+                int padding = m.widthStep - m.nChannels * m.width;
+                int x, y;
+
+                int[,] intensity = new int[4, 256];
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            gray = (byte)Math.Round(((int)blue + green + red) / 3.0);
+
+                            if (gray > threshold)
+                            {
+                                dataPtr[0] = (byte)255;
+                                dataPtr[1] = (byte)255;
+                                dataPtr[2] = (byte)255;
+                            } else
+                            {
+                                dataPtr[0] = 0;
+                                dataPtr[1] = 0;
+                                dataPtr[2] = 0;
+                            }
+
+                            dataPtr += nChan;
+                        }
+
+                        dataPtr += padding;
+                    }
+                }
+            }
+        }
+
+        public static void ConvertToBW_Otsu(Emgu.CV.Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                double variance, maxVariance = 0.0;
+                double q1, q2, u1, u2;
+                int maxThreshold = 0;
+
+                int[] histogram = Histogram_Gray(img);
+
+                for (int t = 0; t < 255; t++)
+                {
+                    q1 = 0.0;
+                    q2 = 0.0;
+                    u1 = 0.0;
+                    u2 = 0.0;
+
+                    for (int i = 0; i <= t; i++)
+                    {
+                        q1 += histogram[i];
+                        u1 += i * histogram[i];
+                    }
+
+                    for (int j = t + 1; j < 255; j++)
+                    {
+                        q2 += histogram[j];
+                        u2 += j * histogram[j];
+                    }
+
+                    u1 /= q1;
+                    u2 /= q2;
+
+                    variance = q1 * q2 * (Math.Pow((u1 - u2), 2));
+
+                    if (variance > maxVariance)
+                    {
+                        maxVariance = variance;
+                        maxThreshold = t;
+                    }
+                }
+
+                ConvertToBW(img, maxThreshold);
+            }
+        }
+        public static void Mean_solutionB(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy)
+        {
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer();
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer();
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels;
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                int firstSumB = 0, firstSumG = 0, firstSumR = 0;
+                int sumB = 0, sumG = 0, sumR = 0;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if (x == 0 && y == 0) //top left corner
+                            {
+                                sumB = ((int)dataPtrO[0] * 4 + (dataPtrO + nChan)[0] * 2 + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0]);
+                                sumG = ((int)dataPtrO[1] * 4 + (dataPtrO + nChan)[1] * 2 + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1]);
+                                sumR = ((int)dataPtrO[2] * 4 + (dataPtrO + nChan)[2] * 2 + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2]);
+
+                                firstSumB = sumB;
+                                firstSumG = sumG;
+                                firstSumR = sumR;
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 1 && y == 0) // top margin pixel after left corner
+                            {
+                                sumB = sumB - (dataPtrO - nChan)[0] * 2 - (dataPtrO - nChan + ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - nChan)[1] * 2 - (dataPtrO - nChan + ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - nChan)[2] * 2 - (dataPtrO - nChan + ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == width - 1 && y == 0) //top right corner
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan + ws)[0] + dataPtrO[0] * 2 + (dataPtrO + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan + ws)[1] + dataPtrO[1] * 2 + (dataPtrO + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan + ws)[2] + dataPtrO[2] * 2 + (dataPtrO + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 0 && y == height - 1) //bottom left corner
+                            {
+                                sumB = firstSumB - (dataPtrO - 2 * ws)[0] * 2 - (dataPtrO - 2 * ws + nChan)[0] + dataPtrO[0] * 2 + (dataPtrO + nChan)[0];
+                                sumG = firstSumG - (dataPtrO - 2 * ws)[1] * 2 - (dataPtrO - 2 * ws + nChan)[1] + dataPtrO[1] * 2 + (dataPtrO + nChan)[1];
+                                sumR = firstSumR - (dataPtrO - 2 * ws)[2] * 2 - (dataPtrO - 2 * ws + nChan)[2] + dataPtrO[2] * 2 + (dataPtrO + nChan)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 1 && y == height - 1) // bottom margin pixel after left bottom corner
+                            {
+                                sumB = sumB - (dataPtrO - nChan)[0] * 2 - (dataPtrO - nChan - ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan - ws)[0];
+                                sumG = sumG - (dataPtrO - nChan)[1] * 2 - (dataPtrO - nChan - ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan - ws)[1];
+                                sumR = sumR - (dataPtrO - nChan)[2] * 2 - (dataPtrO - nChan - ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan - ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == width - 1 && y == height - 1) //bottom right corner
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan - ws)[0] + dataPtrO[0] * 2 + (dataPtrO - ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan - ws)[1] + dataPtrO[1] * 2 + (dataPtrO - ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan - ws)[2] + dataPtrO[2] * 2 + (dataPtrO - ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 0 && y == 1) //left margin pixel after left top corner
+                            {
+                                sumB = firstSumB - (dataPtrO - ws)[0] * 2 - (dataPtrO + nChan - ws)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = firstSumG - (dataPtrO - ws)[1] * 2 - (dataPtrO + nChan - ws)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = firstSumR - (dataPtrO - ws)[2] * 2 - (dataPtrO + nChan - ws)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                firstSumB = sumB;
+                                firstSumG = sumG;
+                                firstSumR = sumR;
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (y == 0) // top margin
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan + ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan + ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan + ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (y == height - 1) // bottom margin
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan - ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan - ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan - ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan - ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan - ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan - ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 0) // left margin
+                            {
+                                sumB = firstSumB - (dataPtrO - 2 * ws)[0] * 2 - (dataPtrO + nChan - 2 * ws)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = firstSumG - (dataPtrO - 2 * ws)[1] * 2 - (dataPtrO + nChan - 2 * ws)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = firstSumR - (dataPtrO - 2 * ws)[2] * 2 - (dataPtrO + nChan - 2 * ws)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                firstSumB = sumB;
+                                firstSumG = sumG;
+                                firstSumR = sumR;
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == width - 1) //right margin
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan - ws)[0] - (dataPtrO - 2 * nChan)[0] - (dataPtrO - 2 * nChan + ws)[0] + (dataPtrO - ws)[0] + dataPtrO[0] + (dataPtrO + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan - ws)[1] - (dataPtrO - 2 * nChan)[1] - (dataPtrO - 2 * nChan + ws)[1] + (dataPtrO - ws)[1] + dataPtrO[1] + (dataPtrO + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan - ws)[2] - (dataPtrO - 2 * nChan)[2] - (dataPtrO - 2 * nChan + ws)[2] + (dataPtrO - ws)[2] + dataPtrO[2] + (dataPtrO + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 1) // second column
+                            {
+                                sumB = sumB - (dataPtrO - nChan - ws)[0] - (dataPtrO - nChan)[0] - (dataPtrO - nChan + ws)[0] + (dataPtrO + nChan - ws)[0] + (dataPtrO + nChan)[0] + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - nChan - ws)[1] - (dataPtrO - nChan)[1] - (dataPtrO - nChan + ws)[1] + (dataPtrO + nChan - ws)[1] + (dataPtrO + nChan)[1] + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - nChan - ws)[2] - (dataPtrO - nChan)[2] - (dataPtrO - nChan + ws)[2] + (dataPtrO + nChan - ws)[2] + (dataPtrO + nChan)[2] + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else //center pixels
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan - ws)[0] - (dataPtrO - 2 * nChan)[0] - (dataPtrO - 2 * nChan + ws)[0] + (dataPtrO + nChan - ws)[0] + (dataPtrO + nChan)[0] + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan - ws)[1] - (dataPtrO - 2 * nChan)[1] - (dataPtrO - 2 * nChan + ws)[1] + (dataPtrO + nChan - ws)[1] + (dataPtrO + nChan)[1] + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan - ws)[2] - (dataPtrO - 2 * nChan)[2] - (dataPtrO - 2 * nChan + ws)[2] + (dataPtrO + nChan - ws)[2] + (dataPtrO + nChan)[2] + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+
+                            dataPtrO += nChan;
+                            dataPtrD += nChan;
+                        }
+
+                        dataPtrO += padding;
+                        dataPtrD += padding;
+                    }
+                }
+            }
+        }
+        public static void Mean_solutionC(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, int size) // to do
+        {
+            unsafe
+            {
+                MIplImage mAux = imgCopy.MIplImage;
+                MIplImage mResult = img.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer();
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer();
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels;
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                int firstSumB = 0, firstSumG = 0, firstSumR = 0;
+                int sumB = 0, sumG = 0, sumR = 0;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if (x == 0 && y == 0) //top left corner
+                            {
+                                sumB = ((int)dataPtrO[0] * 4 + (dataPtrO + nChan)[0] * 2 + (dataPtrO + ws)[0] * 2 + (dataPtrO + ws + nChan)[0]);
+                                sumG = ((int)dataPtrO[1] * 4 + (dataPtrO + nChan)[1] * 2 + (dataPtrO + ws)[1] * 2 + (dataPtrO + ws + nChan)[1]);
+                                sumR = ((int)dataPtrO[2] * 4 + (dataPtrO + nChan)[2] * 2 + (dataPtrO + ws)[2] * 2 + (dataPtrO + ws + nChan)[2]);
+
+                                firstSumB = sumB;
+                                firstSumG = sumG;
+                                firstSumR = sumR;
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 1 && y == 0) // top margin pixel after left corner
+                            {
+                                sumB = sumB - (dataPtrO - nChan)[0] * 2 - (dataPtrO - nChan + ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - nChan)[1] * 2 - (dataPtrO - nChan + ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - nChan)[2] * 2 - (dataPtrO - nChan + ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == width - 1 && y == 0) //top right corner
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan + ws)[0] + dataPtrO[0] * 2 + (dataPtrO + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan + ws)[1] + dataPtrO[1] * 2 + (dataPtrO + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan + ws)[2] + dataPtrO[2] * 2 + (dataPtrO + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 0 && y == height - 1) //bottom left corner
+                            {
+                                sumB = firstSumB - (dataPtrO - 2 * ws)[0] * 2 - (dataPtrO - 2 * ws + nChan)[0] + dataPtrO[0] * 2 + (dataPtrO + nChan)[0];
+                                sumG = firstSumG - (dataPtrO - 2 * ws)[1] * 2 - (dataPtrO - 2 * ws + nChan)[1] + dataPtrO[1] * 2 + (dataPtrO + nChan)[1];
+                                sumR = firstSumR - (dataPtrO - 2 * ws)[2] * 2 - (dataPtrO - 2 * ws + nChan)[2] + dataPtrO[2] * 2 + (dataPtrO + nChan)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 1 && y == height - 1) // bottom margin pixel after left bottom corner
+                            {
+                                sumB = sumB - (dataPtrO - nChan)[0] * 2 - (dataPtrO - nChan - ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan - ws)[0];
+                                sumG = sumG - (dataPtrO - nChan)[1] * 2 - (dataPtrO - nChan - ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan - ws)[1];
+                                sumR = sumR - (dataPtrO - nChan)[2] * 2 - (dataPtrO - nChan - ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan - ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == width - 1 && y == height - 1) //bottom right corner
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan - ws)[0] + dataPtrO[0] * 2 + (dataPtrO - ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan - ws)[1] + dataPtrO[1] * 2 + (dataPtrO - ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan - ws)[2] + dataPtrO[2] * 2 + (dataPtrO - ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 0 && y == 1) //left margin pixel after left top corner
+                            {
+                                sumB = firstSumB - (dataPtrO - ws)[0] * 2 - (dataPtrO + nChan - ws)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = firstSumG - (dataPtrO - ws)[1] * 2 - (dataPtrO + nChan - ws)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = firstSumR - (dataPtrO - ws)[2] * 2 - (dataPtrO + nChan - ws)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                firstSumB = sumB;
+                                firstSumG = sumG;
+                                firstSumR = sumR;
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (y == 0) // top margin
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan + ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan + ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan + ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (y == height - 1) // bottom margin
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan)[0] * 2 - (dataPtrO - 2 * nChan - ws)[0] + (dataPtrO + nChan)[0] * 2 + (dataPtrO + nChan - ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan)[1] * 2 - (dataPtrO - 2 * nChan - ws)[1] + (dataPtrO + nChan)[1] * 2 + (dataPtrO + nChan - ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan)[2] * 2 - (dataPtrO - 2 * nChan - ws)[2] + (dataPtrO + nChan)[2] * 2 + (dataPtrO + nChan - ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 0) // left margin
+                            {
+                                sumB = firstSumB - (dataPtrO - 2 * ws)[0] * 2 - (dataPtrO + nChan - 2 * ws)[0] + (dataPtrO + ws)[0] * 2 + (dataPtrO + nChan + ws)[0];
+                                sumG = firstSumG - (dataPtrO - 2 * ws)[1] * 2 - (dataPtrO + nChan - 2 * ws)[1] + (dataPtrO + ws)[1] * 2 + (dataPtrO + nChan + ws)[1];
+                                sumR = firstSumR - (dataPtrO - 2 * ws)[2] * 2 - (dataPtrO + nChan - 2 * ws)[2] + (dataPtrO + ws)[2] * 2 + (dataPtrO + nChan + ws)[2];
+
+                                firstSumB = sumB;
+                                firstSumG = sumG;
+                                firstSumR = sumR;
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == width - 1) //right margin
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan - ws)[0] - (dataPtrO - 2 * nChan)[0] - (dataPtrO - 2 * nChan + ws)[0] + (dataPtrO - ws)[0] + dataPtrO[0] + (dataPtrO + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan - ws)[1] - (dataPtrO - 2 * nChan)[1] - (dataPtrO - 2 * nChan + ws)[1] + (dataPtrO - ws)[1] + dataPtrO[1] + (dataPtrO + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan - ws)[2] - (dataPtrO - 2 * nChan)[2] - (dataPtrO - 2 * nChan + ws)[2] + (dataPtrO - ws)[2] + dataPtrO[2] + (dataPtrO + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else if (x == 1) // second column
+                            {
+                                sumB = sumB - (dataPtrO - nChan - ws)[0] - (dataPtrO - nChan)[0] - (dataPtrO - nChan + ws)[0] + (dataPtrO + nChan - ws)[0] + (dataPtrO + nChan)[0] + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - nChan - ws)[1] - (dataPtrO - nChan)[1] - (dataPtrO - nChan + ws)[1] + (dataPtrO + nChan - ws)[1] + (dataPtrO + nChan)[1] + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - nChan - ws)[2] - (dataPtrO - nChan)[2] - (dataPtrO - nChan + ws)[2] + (dataPtrO + nChan - ws)[2] + (dataPtrO + nChan)[2] + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+                            else //center pixels
+                            {
+                                sumB = sumB - (dataPtrO - 2 * nChan - ws)[0] - (dataPtrO - 2 * nChan)[0] - (dataPtrO - 2 * nChan + ws)[0] + (dataPtrO + nChan - ws)[0] + (dataPtrO + nChan)[0] + (dataPtrO + nChan + ws)[0];
+                                sumG = sumG - (dataPtrO - 2 * nChan - ws)[1] - (dataPtrO - 2 * nChan)[1] - (dataPtrO - 2 * nChan + ws)[1] + (dataPtrO + nChan - ws)[1] + (dataPtrO + nChan)[1] + (dataPtrO + nChan + ws)[1];
+                                sumR = sumR - (dataPtrO - 2 * nChan - ws)[2] - (dataPtrO - 2 * nChan)[2] - (dataPtrO - 2 * nChan + ws)[2] + (dataPtrO + nChan - ws)[2] + (dataPtrO + nChan)[2] + (dataPtrO + nChan + ws)[2];
+
+                                dataPtrD[0] = (byte)(Math.Round(sumB / 9.0));
+                                dataPtrD[1] = (byte)(Math.Round(sumG / 9.0));
+                                dataPtrD[2] = (byte)(Math.Round(sumR / 9.0));
+                            }
+
+                            dataPtrO += nChan;
+                            dataPtrD += nChan;
+                        }
+
+                        dataPtrO += padding;
+                        dataPtrD += padding;
+                    }
+                }
+            }
+        }
+
+        public static void Rotation_Bilinear(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, float angle) // needs adjusts
+        {
+            unsafe
+            {
+                MIplImage mResult = img.MIplImage;
+                MIplImage mAux = imgCopy.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int x, y;
+                double xO, yO, lowerX, lowerY, upperX, upperY, diffX, diffY;
+                double blueLowerX, blueUpperX, greenLowerX, greenUpperX, redLowerX, redUpperX;
+                double blueY, greenY, redY;
+
+                double xCenter = img.Width / 2.0;
+                double yCenter = img.Height / 2.0;
+                double cosAngle = Math.Cos(angle);
+                double sinAngle = Math.Sin(angle);
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            xO = (x - xCenter) * cosAngle - (yCenter - y) * sinAngle + xCenter;
+                            yO = yCenter - (x - xCenter) * sinAngle - (yCenter - y) * cosAngle;
+
+                            if (xO < 0 || yO < 0 || xO >= width || yO >= height)
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else
+                            {
+                                lowerX = Math.Floor(xO);
+                                lowerY = Math.Floor(yO);
+                                upperX = Math.Ceiling(xO);
+                                upperY = Math.Ceiling(yO);
+
+                                diffX = xO - lowerX;
+                                diffY = yO - lowerY;
+
+                                if ((int)lowerX == width && (int)lowerY == height) // bottom right cornor
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2];
+
+                                    blueUpperX = blueLowerX;
+                                    greenUpperX = greenLowerX;
+                                    redUpperX = redLowerX;
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else if ((int)lowerX == width) // right margin
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2];
+
+                                    blueUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0];
+                                    greenUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1];
+                                    redUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2];
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else if ((int)lowerY == height) // bottom margin
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[2];
+
+                                    blueUpperX = blueLowerX;
+                                    greenUpperX = greenLowerX;
+                                    redUpperX = redLowerX;
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else // all other pixels
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[2];
+
+                                    blueUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[0];
+                                    greenUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[1];
+                                    redUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[2];
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+
+                                blue = (byte)Math.Round(blueY);
+                                green = (byte)Math.Round(greenY);
+                                red = (byte)Math.Round(redY);
+                            }
+
+                            (dataPtrD + y * ws + x * nChan)[0] = blue;
+                            (dataPtrD + y * ws + x * nChan)[1] = green;
+                            (dataPtrD + y * ws + x * nChan)[2] = red;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void Scale_Bilinear(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, float scaleFactor) // needs adjusts
+        {
+            unsafe
+            {
+                MIplImage mResult = img.MIplImage;
+                MIplImage mAux = imgCopy.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int x, y;
+                double xO, yO, lowerX, lowerY, upperX, upperY, diffX, diffY;
+                double blueLowerX, blueUpperX, greenLowerX, greenUpperX, redLowerX, redUpperX;
+                double blueY, greenY, redY;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            xO = (int)Math.Round(x / scaleFactor);
+                            yO = (int)Math.Round(y / scaleFactor);
+
+                            if (xO < 0 || yO < 0 || xO >= width || yO >= height)
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else
+                            {
+                                lowerX = Math.Floor(xO);
+                                lowerY = Math.Floor(yO);
+                                upperX = Math.Ceiling(xO);
+                                upperY = Math.Ceiling(yO);
+
+                                diffX = xO - lowerX;
+                                diffY = yO - lowerY;
+
+                                if ((int)lowerX == width && (int)lowerY == height) // bottom right cornor
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2];
+
+                                    blueUpperX = blueLowerX;
+                                    greenUpperX = greenLowerX;
+                                    redUpperX = redLowerX;
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else if ((int)lowerX == width) // right margin
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2];
+
+                                    blueUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0];
+                                    greenUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1];
+                                    redUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2];
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else if ((int)lowerY == height) // bottom margin
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[2];
+
+                                    blueUpperX = blueLowerX;
+                                    greenUpperX = greenLowerX;
+                                    redUpperX = redLowerX;
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else // all other pixels
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[2];
+
+                                    blueUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[0];
+                                    greenUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[1];
+                                    redUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[2];
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+
+                                blue = (byte)Math.Round(blueY);
+                                green = (byte)Math.Round(greenY);
+                                red = (byte)Math.Round(redY);
+                            }
+
+                            (dataPtrD + y * ws + x * nChan)[0] = blue;
+                            (dataPtrD + y * ws + x * nChan)[1] = green;
+                            (dataPtrD + y * ws + x * nChan)[2] = red;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void Scale_point_xy_Bilinear(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, float scaleFactor, int xCenter, int yCenter) // needs adjusts
+        {
+            unsafe
+            {
+                MIplImage mResult = img.MIplImage;
+                MIplImage mAux = imgCopy.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+
+                byte blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int x, y;
+                double xO, yO, lowerX, lowerY, upperX, upperY, diffX, diffY;
+                double blueLowerX, blueUpperX, greenLowerX, greenUpperX, redLowerX, redUpperX;
+                double blueY, greenY, redY;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            xO = (int)Math.Round((x - width / 2) / scaleFactor + xCenter);
+                            yO = (int)Math.Round((y - height / 2) / scaleFactor + yCenter);
+
+                            if (xO < 0 || yO < 0 || xO >= width || yO >= height)
+                            {
+                                blue = 0;
+                                green = 0;
+                                red = 0;
+                            }
+                            else
+                            {
+                                lowerX = Math.Floor(xO);
+                                lowerY = Math.Floor(yO);
+                                upperX = Math.Ceiling(xO);
+                                upperY = Math.Ceiling(yO);
+
+                                diffX = xO - lowerX;
+                                diffY = yO - lowerY;
+
+                                if ((int)lowerX == width && (int)lowerY == height) // bottom right cornor
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2];
+
+                                    blueUpperX = blueLowerX;
+                                    greenUpperX = greenLowerX;
+                                    redUpperX = redLowerX;
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else if ((int)lowerX == width) // right margin
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2];
+
+                                    blueUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0];
+                                    greenUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1];
+                                    redUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2];
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else if ((int)lowerY == height) // bottom margin
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[2];
+
+                                    blueUpperX = blueLowerX;
+                                    greenUpperX = greenLowerX;
+                                    redUpperX = redLowerX;
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+                                else // all other pixels
+                                {
+                                    blueLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[0];
+                                    greenLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[1];
+                                    redLowerX = (1 - diffX) * (dataPtrO + (int)lowerY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)lowerY * ws + (int)upperX * nChan)[2];
+
+                                    blueUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[0] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[0];
+                                    greenUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[1] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[1];
+                                    redUpperX = (1 - diffX) * (dataPtrO + (int)upperY * ws + (int)lowerX * nChan)[2] + diffX * (dataPtrO + (int)upperY * ws + (int)upperX * nChan)[2];
+
+                                    blueY = (1 - diffY) * blueLowerX + diffY * blueUpperX;
+                                    greenY = (1 - diffY) * greenLowerX + diffY * greenUpperX;
+                                    redY = (1 - diffY) * redLowerX + diffY * redUpperX;
+                                }
+
+                                blue = (byte)Math.Round(blueY);
+                                green = (byte)Math.Round(greenY);
+                                red = (byte)Math.Round(redY);
+                            }
+
+                            (dataPtrD + y * ws + x * nChan)[0] = blue;
+                            (dataPtrD + y * ws + x * nChan)[1] = green;
+                            (dataPtrD + y * ws + x * nChan)[2] = red;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
