@@ -296,6 +296,24 @@ namespace SS_OpenCV
             Histogram allHistogram = new Histogram(ImageClass.Histogram_All(img));
             allHistogram.ShowDialog();
         }
+
+        private void signsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (img == null)
+                return;
+
+            Cursor = Cursors.WaitCursor; // clock cursor 
+
+            //copy Undo Image
+            imgUndo = img.Copy();
+
+            ImageClass.Signs(img, imgUndo);
+
+            ImageViewer.Image = img.Bitmap;
+            ImageViewer.Refresh(); // refresh image on the screen
+
+            Cursor = Cursors.Default; // normal cursor 
+        }
     }
 
 

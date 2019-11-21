@@ -52,14 +52,15 @@
             this.zoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.filtersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nonUniformToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.histogramGrayToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.histogramRGBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.histogramAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.evalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.histogramGrayToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ImageViewer = new System.Windows.Forms.PictureBox();
-            this.histogramRGBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.histogramAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.signsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ImageViewer)).BeginInit();
@@ -146,7 +147,8 @@
             this.histogramGrayToolStripMenuItem,
             this.histogramRGBToolStripMenuItem,
             this.histogramAllToolStripMenuItem,
-            this.autoZoomToolStripMenuItem});
+            this.autoZoomToolStripMenuItem,
+            this.signsToolStripMenuItem});
             this.imageToolStripMenuItem.Name = "imageToolStripMenuItem";
             this.imageToolStripMenuItem.Size = new System.Drawing.Size(65, 24);
             this.imageToolStripMenuItem.Text = "Image";
@@ -245,9 +247,30 @@
             // nonUniformToolStripMenuItem
             // 
             this.nonUniformToolStripMenuItem.Name = "nonUniformToolStripMenuItem";
-            this.nonUniformToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.nonUniformToolStripMenuItem.Size = new System.Drawing.Size(178, 26);
             this.nonUniformToolStripMenuItem.Text = "Non Uniform";
             this.nonUniformToolStripMenuItem.Click += new System.EventHandler(this.nonUniformToolStripMenuItem_Click);
+            // 
+            // histogramGrayToolStripMenuItem
+            // 
+            this.histogramGrayToolStripMenuItem.Name = "histogramGrayToolStripMenuItem";
+            this.histogramGrayToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.histogramGrayToolStripMenuItem.Text = "Histogram (Gray)";
+            this.histogramGrayToolStripMenuItem.Click += new System.EventHandler(this.histogramGrayToolStripMenuItem_Click);
+            // 
+            // histogramRGBToolStripMenuItem
+            // 
+            this.histogramRGBToolStripMenuItem.Name = "histogramRGBToolStripMenuItem";
+            this.histogramRGBToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.histogramRGBToolStripMenuItem.Text = "Histogram (RGB)";
+            this.histogramRGBToolStripMenuItem.Click += new System.EventHandler(this.histogramRGBToolStripMenuItem_Click);
+            // 
+            // histogramAllToolStripMenuItem
+            // 
+            this.histogramAllToolStripMenuItem.Name = "histogramAllToolStripMenuItem";
+            this.histogramAllToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.histogramAllToolStripMenuItem.Text = "Histogram (All)";
+            this.histogramAllToolStripMenuItem.Click += new System.EventHandler(this.histogramAllToolStripMenuItem_Click);
             // 
             // autoZoomToolStripMenuItem
             // 
@@ -282,13 +305,6 @@
             this.panel1.Size = new System.Drawing.Size(962, 515);
             this.panel1.TabIndex = 6;
             // 
-            // histogramGrayToolStripMenuItem
-            // 
-            this.histogramGrayToolStripMenuItem.Name = "histogramGrayToolStripMenuItem";
-            this.histogramGrayToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.histogramGrayToolStripMenuItem.Text = "Histogram (Gray)";
-            this.histogramGrayToolStripMenuItem.Click += new System.EventHandler(this.histogramGrayToolStripMenuItem_Click);
-            // 
             // ImageViewer
             // 
             this.ImageViewer.Location = new System.Drawing.Point(0, 0);
@@ -299,19 +315,12 @@
             this.ImageViewer.TabIndex = 6;
             this.ImageViewer.TabStop = false;
             // 
-            // histogramRGBToolStripMenuItem
+            // signsToolStripMenuItem
             // 
-            this.histogramRGBToolStripMenuItem.Name = "histogramRGBToolStripMenuItem";
-            this.histogramRGBToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.histogramRGBToolStripMenuItem.Text = "Histogram (RGB)";
-            this.histogramRGBToolStripMenuItem.Click += new System.EventHandler(this.histogramRGBToolStripMenuItem_Click);
-            // 
-            // histogramAllToolStripMenuItem
-            // 
-            this.histogramAllToolStripMenuItem.Name = "histogramAllToolStripMenuItem";
-            this.histogramAllToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.histogramAllToolStripMenuItem.Text = "Histogram (All)";
-            this.histogramAllToolStripMenuItem.Click += new System.EventHandler(this.histogramAllToolStripMenuItem_Click);
+            this.signsToolStripMenuItem.Name = "signsToolStripMenuItem";
+            this.signsToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.signsToolStripMenuItem.Text = "Signs";
+            this.signsToolStripMenuItem.Click += new System.EventHandler(this.signsToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -368,6 +377,7 @@
         private System.Windows.Forms.ToolStripMenuItem histogramGrayToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem histogramRGBToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem histogramAllToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem signsToolStripMenuItem;
     }
 }
 

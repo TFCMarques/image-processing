@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using Emgu.CV.Structure;
 using Emgu.CV;
+using System.IO;
+using System.Linq;
 
 namespace SS_OpenCV
 {
@@ -161,7 +163,7 @@ namespace SS_OpenCV
                 int width = img.Width;
                 int height = img.Height;
                 int nChan = m.nChannels;
-                int padding = m.widthStep - m.nChannels * m.width; 
+                int padding = m.widthStep - m.nChannels * m.width;
                 int x, y;
 
                 if (nChan == 3) // image in RGB
@@ -192,7 +194,7 @@ namespace SS_OpenCV
                 byte blue, green, red;
                 double newBlue, newGreen, newRed;
 
-                int width = img.Width;      
+                int width = img.Width;
                 int height = img.Height;
                 int nChan = m.nChannels; // number of channels - 3
                 int padding = m.widthStep - m.nChannels * m.width;
@@ -1045,7 +1047,8 @@ namespace SS_OpenCV
                                 dataPtr[0] = (byte)255;
                                 dataPtr[1] = (byte)255;
                                 dataPtr[2] = (byte)255;
-                            } else
+                            }
+                            else
                             {
                                 dataPtr[0] = 0;
                                 dataPtr[1] = 0;
@@ -1822,6 +1825,440 @@ namespace SS_OpenCV
                         }
                     }
                 }
+            }
+        }
+
+        public static double[] ConvertRGBtoHSV(int redValue, int greenValue, int blueValue)
+        {
+            double hue = 0;
+            double saturation;
+            double value;
+
+            double red = (double)redValue / 255;
+            double green = (double)greenValue / 255;
+            double blue = (double)blueValue / 255;
+
+            double max = Math.Max(red, Math.Max(green, blue));
+            double min = Math.Min(red, Math.Min(green, blue));
+
+            if (max == 0)
+            {
+                hue = 0;
+            } else if (max == red && green >= blue)
+            {
+                hue = 60 * ((green - blue) / (max - min));
+            }else if (max == red && green < blue)
+            {
+                hue = 60 * ((green - blue) / (max - min)) + 360;
+            } else if (max == green)
+            {
+                hue = 60 * ((blue - red) / (max - min)) + 120;
+            } else if (max == blue)
+            {
+                hue = 60 * ((red - green) / (max - min)) + 240;
+            }
+
+            if (hue < 0) hue += 360;
+            saturation = (max == 0) ? 0 : ((max - min) / max);
+            value = max;
+
+            double[] hsv = new double[3];
+            hsv[0] = hue;
+            hsv[1] = saturation * 100;
+            hsv[2] = value * 100;
+
+            return hsv;
+        }
+
+        public static void ConvertMatrixIntoCSV(int[,] matrix)
+        {
+            string filePath = @"D:\\FCT_MIEEC\\Mestrado\\4º Ano\\SS\\Prática\\SS_OpenCV_Base\\SS_OpenCV\\bin\\Debug\\tags.csv";
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+
+            using (StreamWriter outfile = new StreamWriter(filePath))
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    string line = "";
+
+                    for (int x = 0; x < width; x++)
+                    {
+                        line += matrix[x, y].ToString() + ";";
+                    }
+
+                    outfile.WriteLine(line);
+                }
+            }
+        }
+
+        public static int[,] ConnectedComponentsAlgorithm(int[,] matrix)
+        {
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+            int min;
+            int current;
+            bool lrtdProp = false;
+            bool rldtProp = false;
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    current = matrix[x, y];
+                    if (current != 0)
+                    {
+                        if (x == 0)
+                        {
+                            if (y == 0)
+                            {
+                                int neigh1 = matrix[x + 1, y];
+                                int neigh2 = matrix[x, y + 1];
+
+                                List<int> aux = new List<int> {current};
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+
+                                min = aux.Min();
+                            }
+                            else if (y == height - 1)
+                            {
+                                int neigh1 = matrix[x + 1, y];
+                                int neigh2 = matrix[x, y - 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+
+                                min = aux.Min();
+                            }
+                            else
+                            {
+                                int neigh1 = matrix[x + 1, y];
+                                int neigh2 = matrix[x, y + 1];
+                                int neigh3 = matrix[x, y - 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+                                if (neigh3 != 0) aux.Add(neigh3);
+
+                                min = aux.Min();
+                            }
+                        }
+                        else if (x == width - 1)
+                        {
+                            if (y == 0)
+                            {
+                                int neigh1 = matrix[x - 1, y];
+                                int neigh2 = matrix[x, y + 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+
+                                min = aux.Min();
+                            }
+                            else if (y == height - 1)
+                            {
+                                int neigh1 = matrix[x - 1, y];
+                                int neigh2 = matrix[x, y - 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+
+                                min = aux.Min();
+                            }
+                            else
+                            {
+                                int neigh1 = matrix[x - 1, y];
+                                int neigh2 = matrix[x, y + 1];
+                                int neigh3 = matrix[x, y - 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+                                if (neigh3 != 0) aux.Add(neigh3);
+
+                                min = aux.Min();
+                            }
+                        }
+                        else
+                        {
+                            if (y == 0)
+                            {
+                                int neigh1 = matrix[x - 1, y];
+                                int neigh2 = matrix[x + 1, y];
+                                int neigh3 = matrix[x, y + 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+                                if (neigh3 != 0) aux.Add(neigh3);
+
+                                min = aux.Min();
+                            }
+                            else if (y == height - 1)
+                            {
+                                int neigh1 = matrix[x - 1, y];
+                                int neigh2 = matrix[x + 1, y];
+                                int neigh3 = matrix[x, y - 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+                                if (neigh3 != 0) aux.Add(neigh3);
+
+                                min = aux.Min();
+                            }
+                            else
+                            {
+                                int neigh1 = matrix[x - 1, y];
+                                int neigh2 = matrix[x + 1, y];
+                                int neigh3 = matrix[x, y - 1];
+                                int neigh4 = matrix[x, y + 1];
+
+                                List<int> aux = new List<int> { current };
+                                if (neigh1 != 0) aux.Add(neigh1);
+                                if (neigh2 != 0) aux.Add(neigh2);
+                                if (neigh3 != 0) aux.Add(neigh3);
+                                if (neigh4 != 0) aux.Add(neigh4);
+
+                                min = aux.Min();
+                            }
+                        }
+
+                        if (min < current)
+                        {
+                            matrix[x, y] = min;
+                            lrtdProp = true;
+                        }
+                    }
+                }
+            }
+                    
+            if (lrtdProp)
+            {
+                for (int x = width - 1; x >= 0; x--)
+                {
+                    for (int y = height - 1; y >= 0; y--)
+                    {
+                        current = matrix[x, y];
+                        if (current != 0)
+                        {
+                            if (x == 0)
+                            {
+                                if (y == 0)
+                                {
+                                    int neigh1 = matrix[x + 1, y];
+                                    int neigh2 = matrix[x, y + 1];
+
+                                    List<int> aux = new List<int> { current };
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+
+                                    min = aux.Min();
+                                }
+                                else if (y == height - 1)
+                                {
+                                    int neigh1 = matrix[x + 1, y];
+                                    int neigh2 = matrix[x, y - 1];
+
+                                    List<int> aux = new List<int> { current };
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+
+                                    min = aux.Min();
+                                }
+                                else
+                                {
+                                    int neigh1 = matrix[x + 1, y];
+                                    int neigh2 = matrix[x, y + 1];
+                                    int neigh3 = matrix[x, y - 1];
+
+                                    List<int> aux = new List<int> { current };
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+                                    if (neigh3 != 0) aux.Add(neigh3);
+
+                                    min = aux.Min();
+                                }
+                            }
+                            else if (x == width - 1)
+                            {
+                                if (y == 0)
+                                {
+                                    int neigh1 = matrix[x - 1, y];
+                                    int neigh2 = matrix[x, y + 1];
+
+                                    List<int> aux = new List<int>();
+                                    aux.Add(current);
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+
+                                    min = aux.Min();
+                                }
+                                else if (y == height - 1)
+                                {
+                                    int neigh1 = matrix[x - 1, y];
+                                    int neigh2 = matrix[x, y - 1];
+
+                                    List<int> aux = new List<int>();
+                                    aux.Add(current);
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+
+                                    min = aux.Min();
+                                }
+                                else
+                                {
+                                    int neigh1 = matrix[x - 1, y];
+                                    int neigh2 = matrix[x, y + 1];
+                                    int neigh3 = matrix[x, y - 1];
+
+                                    List<int> aux = new List<int>();
+                                    aux.Add(current);
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+                                    if (neigh3 != 0) aux.Add(neigh3);
+
+                                    min = aux.Min();
+                                }
+                            }
+                            else
+                            {
+                                if (y == 0)
+                                {
+                                    int neigh1 = matrix[x - 1, y];
+                                    int neigh2 = matrix[x + 1, y];
+                                    int neigh3 = matrix[x, y + 1];
+
+                                    List<int> aux = new List<int>();
+                                    aux.Add(current);
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+                                    if (neigh3 != 0) aux.Add(neigh3);
+
+                                    min = aux.Min();
+                                }
+                                else if (y == height - 1)
+                                {
+                                    int neigh1 = matrix[x - 1, y];
+                                    int neigh2 = matrix[x + 1, y];
+                                    int neigh3 = matrix[x, y - 1];
+
+                                    List<int> aux = new List<int>();
+                                    aux.Add(current);
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+                                    if (neigh3 != 0) aux.Add(neigh3);
+
+                                    min = aux.Min();
+                                }
+                                else
+                                {
+                                    int neigh1 = matrix[x - 1, y];
+                                    int neigh2 = matrix[x + 1, y];
+                                    int neigh3 = matrix[x, y - 1];
+                                    int neigh4 = matrix[x, y + 1];
+
+                                    List<int> aux = new List<int>();
+                                    aux.Add(current);
+                                    if (neigh1 != 0) aux.Add(neigh1);
+                                    if (neigh2 != 0) aux.Add(neigh2);
+                                    if (neigh3 != 0) aux.Add(neigh3);
+                                    if (neigh4 != 0) aux.Add(neigh4);
+
+                                    min = aux.Min();
+                                }
+                            }
+
+                            if (min < current)
+                            {
+                                matrix[x, y] = min;
+                                rldtProp = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (rldtProp)
+            {
+                ConnectedComponentsAlgorithm(matrix);
+            }
+
+            return matrix;
+        }
+
+        public static void Signs(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy /*, out List<string[]> limitSign, out List<string[]> warningSign, out List<string[]> prohibitionSign, int level */)
+        {
+            unsafe
+            {
+                MIplImage mResult = img.MIplImage;
+                MIplImage mAux = imgCopy.MIplImage;
+
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer(); // pointer to the original image
+                byte* dataPtrD = (byte*)mResult.imageData.ToPointer(); // pointer to the duplicate image
+
+                int blue, green, red;
+
+                int width = img.Width;
+                int height = img.Height;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                int[,] tagMatrix = new int[width, height];
+                int currentTag = 1;
+
+                if (nChan == 3) // image in RGB
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = (int)dataPtrO[0];
+                            green = (int)dataPtrO[1];
+                            red = (int)dataPtrO[2];
+
+                            double[] hsvArray = ConvertRGBtoHSV(red, green, blue);           
+                            double hue = hsvArray[0];
+                            double saturation = hsvArray[1];
+                            double value = hsvArray[2];
+
+                            // red detection
+                            if (0 <= hue && hue <= 10 || 340 <= hue && hue <= 359 &&
+                                50 <= saturation && saturation <= 100)
+                            {
+                                dataPtrD[0] = 0;
+                                dataPtrD[1] = 0;
+                                dataPtrD[2] = 0;
+
+                                tagMatrix[x, y] = currentTag;
+                                currentTag++;
+                            } else
+                            {
+                                dataPtrD[0] = (byte)255;
+                                dataPtrD[1] = (byte)255;
+                                dataPtrD[2] = (byte)255;
+
+                                tagMatrix[x, y] = 0;
+                            }
+
+                            dataPtrD += nChan;
+                            dataPtrO += nChan;
+                        }
+
+                        dataPtrD += padding;
+                        dataPtrO += padding;
+                    }
+                }
+                int[,] propMatrix = ConnectedComponentsAlgorithm(tagMatrix);
+                ConvertMatrixIntoCSV(propMatrix);
             }
         }
     }
