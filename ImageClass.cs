@@ -1844,16 +1844,20 @@ namespace SS_OpenCV
             if (max == 0)
             {
                 hue = 0;
-            } else if (max == red && green >= blue)
+            } 
+            else if (max == red && green >= blue)
             {
                 hue = 60 * ((green - blue) / (max - min));
-            }else if (max == red && green < blue)
+            } 
+            else if (max == red && green < blue)
             {
                 hue = 60 * ((green - blue) / (max - min)) + 360;
-            } else if (max == green)
+            } 
+            else if (max == green)
             {
                 hue = 60 * ((blue - red) / (max - min)) + 120;
-            } else if (max == blue)
+            } 
+            else if (max == blue)
             {
                 hue = 60 * ((red - green) / (max - min)) + 240;
             }
@@ -2092,8 +2096,7 @@ namespace SS_OpenCV
                                     int neigh1 = matrix[x - 1, y];
                                     int neigh2 = matrix[x, y + 1];
 
-                                    List<int> aux = new List<int>();
-                                    aux.Add(current);
+                                    List<int> aux = new List<int> { current };
                                     if (neigh1 != 0) aux.Add(neigh1);
                                     if (neigh2 != 0) aux.Add(neigh2);
 
@@ -2104,8 +2107,7 @@ namespace SS_OpenCV
                                     int neigh1 = matrix[x - 1, y];
                                     int neigh2 = matrix[x, y - 1];
 
-                                    List<int> aux = new List<int>();
-                                    aux.Add(current);
+                                    List<int> aux = new List<int> { current };
                                     if (neigh1 != 0) aux.Add(neigh1);
                                     if (neigh2 != 0) aux.Add(neigh2);
 
@@ -2117,8 +2119,7 @@ namespace SS_OpenCV
                                     int neigh2 = matrix[x, y + 1];
                                     int neigh3 = matrix[x, y - 1];
 
-                                    List<int> aux = new List<int>();
-                                    aux.Add(current);
+                                    List<int> aux = new List<int> { current };
                                     if (neigh1 != 0) aux.Add(neigh1);
                                     if (neigh2 != 0) aux.Add(neigh2);
                                     if (neigh3 != 0) aux.Add(neigh3);
@@ -2134,8 +2135,7 @@ namespace SS_OpenCV
                                     int neigh2 = matrix[x + 1, y];
                                     int neigh3 = matrix[x, y + 1];
 
-                                    List<int> aux = new List<int>();
-                                    aux.Add(current);
+                                    List<int> aux = new List<int> { current };
                                     if (neigh1 != 0) aux.Add(neigh1);
                                     if (neigh2 != 0) aux.Add(neigh2);
                                     if (neigh3 != 0) aux.Add(neigh3);
@@ -2148,8 +2148,7 @@ namespace SS_OpenCV
                                     int neigh2 = matrix[x + 1, y];
                                     int neigh3 = matrix[x, y - 1];
 
-                                    List<int> aux = new List<int>();
-                                    aux.Add(current);
+                                    List<int> aux = new List<int> { current };
                                     if (neigh1 != 0) aux.Add(neigh1);
                                     if (neigh2 != 0) aux.Add(neigh2);
                                     if (neigh3 != 0) aux.Add(neigh3);
@@ -2163,8 +2162,7 @@ namespace SS_OpenCV
                                     int neigh3 = matrix[x, y - 1];
                                     int neigh4 = matrix[x, y + 1];
 
-                                    List<int> aux = new List<int>();
-                                    aux.Add(current);
+                                    List<int> aux = new List<int> { current };
                                     if (neigh1 != 0) aux.Add(neigh1);
                                     if (neigh2 != 0) aux.Add(neigh2);
                                     if (neigh3 != 0) aux.Add(neigh3);
@@ -2192,7 +2190,7 @@ namespace SS_OpenCV
             return matrix;
         }
 
-        public static void Signs(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy /*, out List<string[]> limitSign, out List<string[]> warningSign, out List<string[]> prohibitionSign, int level */)
+        public static void /*Image<Bgr, byte>*/ Signs(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy/*, out List<string[]> limitSign, out List<string[]> warningSign, out List<string[]> prohibitionSign, int level*/)
         {
             unsafe
             {
@@ -2225,13 +2223,13 @@ namespace SS_OpenCV
                             green = (int)dataPtrO[1];
                             red = (int)dataPtrO[2];
 
-                            double[] hsvArray = ConvertRGBtoHSV(red, green, blue);           
+                            double[] hsvArray = ConvertRGBtoHSV(red, green, blue);
                             double hue = hsvArray[0];
                             double saturation = hsvArray[1];
                             double value = hsvArray[2];
 
                             // red detection
-                            if (0 <= hue && hue <= 10 || 340 <= hue && hue <= 359 &&
+                            if ((0 <= hue && hue <= 20 || 340 <= hue && hue < 360) &&
                                 50 <= saturation && saturation <= 100)
                             {
                                 dataPtrD[0] = 0;
@@ -2240,7 +2238,8 @@ namespace SS_OpenCV
 
                                 tagMatrix[x, y] = currentTag;
                                 currentTag++;
-                            } else
+                            }
+                            else
                             {
                                 dataPtrD[0] = (byte)255;
                                 dataPtrD[1] = (byte)255;
@@ -2258,7 +2257,94 @@ namespace SS_OpenCV
                     }
                 }
                 int[,] propMatrix = ConnectedComponentsAlgorithm(tagMatrix);
+                // ConvertMatrixIntoCSV(propMatrix);
+
+                Dictionary<int, int> tagsDict = new Dictionary<int, int>();
+
+                for (x = 0; x < width; x++)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        if (propMatrix[x, y] != 0)
+                        {
+                            if (tagsDict.ContainsKey(propMatrix[x, y]))
+                            {
+                                tagsDict[propMatrix[x, y]]++;
+                            }
+                            else
+                            {
+                                tagsDict.Add(propMatrix[x, y], 1);
+                            }
+                        }
+                    }
+                }
+
+                KeyValuePair<int, int> maxTag = tagsDict.First();
+                foreach (KeyValuePair<int, int> tag in tagsDict)
+                {
+                    if (tag.Value > maxTag.Value) maxTag = tag;
+                }
+
+                foreach (KeyValuePair<int, int> tag in tagsDict)
+                {
+                    double percentage = ((double)tag.Value / (double)maxTag.Value) * 100;
+
+                    if (percentage <= 7.5)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            for (y = 0; y < height; y++)
+                            {
+                                if (propMatrix[x, y] == tag.Key)
+                                    propMatrix[x, y] = 0;
+                            }
+                        }
+                        // tagsDict.Remove(tag.Key);
+                    }
+                }
+
                 ConvertMatrixIntoCSV(propMatrix);
+
+                //List<string[]> detectedSigns = new List<string[]>();
+                //foreach (KeyValuePair<int, int> tag in tagsDict)
+                //{
+                //    string[] aux = new string[4];
+
+                //    for (x = 0; x < width; x++)
+                //    {
+                //        for (y = 0; y < height; y++)
+                //        {
+                //            if (propMatrix[x, y] == tag.Key)
+                //            {
+                //                if(aux[0].Length == 0 || Convert.ToInt32(aux[0]) > x)
+                //                {
+                //                    aux[0] = x.ToString();
+                //                }
+
+                //                if (aux[1].Length == 0 || Convert.ToInt32(aux[1]) < x)
+                //                {
+                //                    aux[1] = x.ToString();
+                //                }
+
+                //                if (aux[2].Length == 0 || Convert.ToInt32(aux[2]) > y)
+                //                {
+                //                    aux[2] = y.ToString();
+                //                }
+
+                //                if (aux[3].Length == 0 || Convert.ToInt32(aux[3]) < y)
+                //                {
+                //                    aux[3] = y.ToString();
+                //                }
+                //            }
+
+                //        }
+                //    }
+                //}
+
+                //foreach (string[] sign in detectedSigns)
+                //{
+                //    Console.WriteLine(sign);
+                //}
             }
         }
     }
