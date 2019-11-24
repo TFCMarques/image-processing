@@ -2190,7 +2190,130 @@ namespace SS_OpenCV
             return matrix;
         }
 
-        public static void /*Image<Bgr, byte>*/ Signs(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy/*, out List<string[]> limitSign, out List<string[]> warningSign, out List<string[]> prohibitionSign, int level*/)
+        public static Dictionary<int, int> RemoveNoiseTags(int[,] matrix)
+        {
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+            Dictionary<int, int> tagsDict = new Dictionary<int, int>();
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (matrix[x, y] != 0)
+                    {
+                        if (tagsDict.ContainsKey(matrix[x, y]))
+                        {
+                            tagsDict[matrix[x, y]]++;
+                        }
+                        else
+                        {
+                            tagsDict.Add(matrix[x, y], 1);
+                        }
+                    }
+                }
+            }
+
+            KeyValuePair<int, int> maxTag = tagsDict.First();
+            foreach (KeyValuePair<int, int> tag in tagsDict)
+            {
+                if (tag.Value > maxTag.Value) maxTag = tag;
+            }
+
+            List<int> keysToRemove = new List<int>();
+            foreach (KeyValuePair<int, int> tag in tagsDict)
+            {
+                double percentage = ((double)tag.Value / (double)maxTag.Value) * 100;
+
+                if (percentage <= 50.0)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        for (int y = 0; y < height; y++)
+                        {
+                            if (matrix[x, y] == tag.Key)
+                                matrix[x, y] = 0;
+                        }
+                    }
+                    keysToRemove.Add(tag.Key);
+                }
+            }
+
+            foreach (int key in keysToRemove)
+            {
+                tagsDict.Remove(key);
+            }
+
+            return tagsDict;
+        }
+
+        public static string IdentifySignContent(List<Image<Bgr, byte>> segments)
+        {
+            unsafe
+            {
+                string content = "";
+         
+                foreach (Image<Bgr, byte> segment in segments)
+                {
+                    ConvertToBW_Otsu(segment);
+                    MIplImage segDigit = segment.MIplImage;
+                    int width = segDigit.width;
+                    int height = segDigit.height;
+
+                    int maxMatching = 0;
+                    string bestMatch = "";
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        int matchingPixels = 0;
+                        string imgPath = @"D:\\FCT_MIEEC\\Mestrado\\4º Ano\\SS\\Prática\\SS_OpenCV_Base\\SS_OpenCV\\bin\\Debug\\digitos\\" + i.ToString() + ".png";
+                        Image<Bgr, byte> digit = new Image<Bgr, byte>(imgPath);
+                        Image<Bgr, byte> resizedDigit = digit.Resize(width, height, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                        ConvertToBW_Otsu(resizedDigit);
+                        MIplImage d = resizedDigit.MIplImage;
+                        byte* dataPtrD = (byte*)d.imageData.ToPointer();
+                        byte* dataPtrS = (byte*)segDigit.imageData.ToPointer();
+
+                        int nChan = d.nChannels;
+                        int padding = d.widthStep - d.nChannels * d.width;
+
+                        if (nChan == 3)
+                        {
+                            for (int y = 0; y < height; y++)
+                            {
+                                for(int x = 0; x < width; x++)
+                                {
+                                    if (dataPtrD[0] == dataPtrS[0] &&
+                                        dataPtrD[1] == dataPtrS[1] &&
+                                        dataPtrD[2] == dataPtrS[2])
+                                    {
+                                        matchingPixels++;
+                                    }
+
+                                    dataPtrS += nChan;
+                                    dataPtrD += nChan;
+                                }
+
+                                dataPtrS += padding;
+                                dataPtrD += padding;
+                            }
+
+                            if (matchingPixels > maxMatching)
+                            {
+                                maxMatching = matchingPixels;
+                                bestMatch = i.ToString();
+                            }
+                        }
+                    }
+
+                    content += bestMatch;
+                }
+
+                return content;
+            }
+        }
+
+        public static void Signs(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy/*, out List<string[]> limitSign, out List<string[]> warningSign, out List<string[]> prohibitionSign, int level*/)
         {
             unsafe
             {
@@ -2229,24 +2352,144 @@ namespace SS_OpenCV
                             double value = hsvArray[2];
 
                             // red detection
-                            if ((0 <= hue && hue <= 20 || 340 <= hue && hue < 360) &&
-                                50 <= saturation && saturation <= 100)
+                            if ((0 <= hue && hue <= 20 || 330 <= hue && hue < 360) &&
+                                30 <= saturation && saturation <= 100 &&
+                                30 <= value && value <= 100)
                             {
-                                dataPtrD[0] = 0;
-                                dataPtrD[1] = 0;
-                                dataPtrD[2] = 0;
+                                //dataPtrD[0] = 0;
+                                //dataPtrD[1] = 0;
+                                //dataPtrD[2] = 0;
 
                                 tagMatrix[x, y] = currentTag;
                                 currentTag++;
                             }
                             else
                             {
-                                dataPtrD[0] = (byte)255;
-                                dataPtrD[1] = (byte)255;
-                                dataPtrD[2] = (byte)255;
+                                //dataPtrD[0] = (byte)255;
+                                //dataPtrD[1] = (byte)255;
+                                //dataPtrD[2] = (byte)255;
 
                                 tagMatrix[x, y] = 0;
                             }
+
+                            //dataPtrD += nChan;
+                            dataPtrO += nChan;
+                        }
+
+                        //dataPtrD += padding;
+                        dataPtrO += padding;
+                    }
+                }
+                int[,] propMatrix = ConnectedComponentsAlgorithm(tagMatrix);
+                //ConvertMatrixIntoCSV(propMatrix);
+
+                Dictionary<int, int> tagsDict = RemoveNoiseTags(propMatrix);
+
+                //ConvertMatrixIntoCSV(propMatrix);
+
+                List<string[]> detectedSigns = new List<string[]>();
+                foreach (KeyValuePair<int, int> tag in tagsDict)
+                {
+                    string[] aux = new string[5];
+                    aux[4] = "-1";
+
+                    for (x = 0; x < width; x++)
+                    {
+                        for (y = 0; y < height; y++)
+                        {
+                            if (propMatrix[x, y] == tag.Key)
+                            {
+                                if (aux[0] == null || Convert.ToInt32(aux[0]) > x)
+                                {
+                                    aux[0] = x.ToString();
+                                }
+
+                                if (aux[1] == null || Convert.ToInt32(aux[1]) < x)
+                                {
+                                    aux[1] = x.ToString();
+                                }
+
+                                if (aux[2] == null || Convert.ToInt32(aux[2]) > y)
+                                {
+                                    aux[2] = y.ToString();
+                                }
+
+                                if (aux[3] == null || Convert.ToInt32(aux[3]) < y)
+                                {
+                                    aux[3] = y.ToString();
+                                }
+                            }
+
+                        }
+                    }
+
+                    detectedSigns.Add(aux);
+                }
+
+                foreach (string[] sign in detectedSigns)
+                {
+                    dataPtrD = (byte*)mResult.imageData.ToPointer();
+                    dataPtrO = (byte*)mAux.imageData.ToPointer();
+
+                    int xm = Convert.ToInt32(sign[0]);
+                    int xM = Convert.ToInt32(sign[1]);
+                    int ym = Convert.ToInt32(sign[2]);
+                    int yM = Convert.ToInt32(sign[3]);
+
+                    currentTag = 1;
+                    int[,] digitsMatrix = new int[width, height];
+
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            if(xm <= x && x <= xM && ym <= y && y <= yM)
+                            {
+                                blue = (int)dataPtrO[0];
+                                green = (int)dataPtrO[1];
+                                red = (int)dataPtrO[2];
+
+                                double[] hsvArray = ConvertRGBtoHSV(red, green, blue);
+                                double hue = hsvArray[0];
+                                double saturation = hsvArray[1];
+                                double value = hsvArray[2];
+
+                                if (0 <= hue && hue < 360 &&
+                                    0 <= saturation && saturation <= 100 &&
+                                    0 <= value && value <= 30)
+                                {
+                                    dataPtrD[0] = 0;
+                                    dataPtrD[1] = 0;
+                                    dataPtrD[2] = 0;
+                                    digitsMatrix[x, y] = currentTag;
+                                } else
+                                {
+                                    dataPtrD[0] = 255;
+                                    dataPtrD[1] = 255;
+                                    dataPtrD[2] = 255;
+                                    digitsMatrix[x, y] = 0;
+                                }
+
+                                currentTag++;
+                            }
+                            //if (y == yM || y == ym)
+                            //{
+                            //    if (xm < x && x < xM)
+                            //    {
+                            //        dataPtrD[0] = 0;
+                            //        dataPtrD[1] = 0;
+                            //        dataPtrD[2] = (byte)255;
+                            //    }
+                            //}
+                            //else if (x == xM || x == xm)
+                            //{
+                            //    if (ym < y && y < yM)
+                            //    {
+                            //        dataPtrD[0] = 0;
+                            //        dataPtrD[1] = 0;
+                            //        dataPtrD[2] = (byte)255;
+                            //    }
+                            //}
 
                             dataPtrD += nChan;
                             dataPtrO += nChan;
@@ -2255,96 +2498,63 @@ namespace SS_OpenCV
                         dataPtrD += padding;
                         dataPtrO += padding;
                     }
-                }
-                int[,] propMatrix = ConnectedComponentsAlgorithm(tagMatrix);
-                // ConvertMatrixIntoCSV(propMatrix);
 
-                Dictionary<int, int> tagsDict = new Dictionary<int, int>();
+                    digitsMatrix = ConnectedComponentsAlgorithm(digitsMatrix);
+                    Dictionary<int, int> tagsDigitsDict = RemoveNoiseTags(digitsMatrix);
 
-                for (x = 0; x < width; x++)
-                {
-                    for (y = 0; y < height; y++)
+                    // List<string[]> detectedDigits = new List<string[]>();
+                    List<Image<Bgr, byte>> segmentedDigits = new List<Image<Bgr, byte>>();
+                    foreach (KeyValuePair<int, int> tag in tagsDigitsDict)
                     {
-                        if (propMatrix[x, y] != 0)
-                        {
-                            if (tagsDict.ContainsKey(propMatrix[x, y]))
-                            {
-                                tagsDict[propMatrix[x, y]]++;
-                            }
-                            else
-                            {
-                                tagsDict.Add(propMatrix[x, y], 1);
-                            }
-                        }
-                    }
-                }
+                        string[] aux = new string[4];
 
-                KeyValuePair<int, int> maxTag = tagsDict.First();
-                foreach (KeyValuePair<int, int> tag in tagsDict)
-                {
-                    if (tag.Value > maxTag.Value) maxTag = tag;
-                }
-
-                foreach (KeyValuePair<int, int> tag in tagsDict)
-                {
-                    double percentage = ((double)tag.Value / (double)maxTag.Value) * 100;
-
-                    if (percentage <= 7.5)
-                    {
                         for (x = 0; x < width; x++)
                         {
                             for (y = 0; y < height; y++)
                             {
-                                if (propMatrix[x, y] == tag.Key)
-                                    propMatrix[x, y] = 0;
+                                if (digitsMatrix[x, y] == tag.Key)
+                                {
+                                    if (aux[0] == null || Convert.ToInt32(aux[0]) > x)
+                                    {
+                                        aux[0] = x.ToString();
+                                    }
+
+                                    if (aux[1] == null || Convert.ToInt32(aux[1]) < x)
+                                    {
+                                        aux[1] = x.ToString();
+                                    }
+
+                                    if (aux[2] == null || Convert.ToInt32(aux[2]) > y)
+                                    {
+                                        aux[2] = y.ToString();
+                                    }
+
+                                    if (aux[3] == null || Convert.ToInt32(aux[3]) < y)
+                                    {
+                                        aux[3] = y.ToString();
+                                    }
+                                }
+
                             }
                         }
-                        // tagsDict.Remove(tag.Key);
+
+                        // detectedDigits.Add(aux);
+
+                        int startX = Convert.ToInt32(aux[0]);
+                        int startY = Convert.ToInt32(aux[2]);
+                        int endX = Convert.ToInt32(aux[1]);
+                        int endY = Convert.ToInt32(aux[3]);
+                        int digitWidth = endX - startX;
+                        int digitHeight = endY - startY;
+
+                        Image<Bgr, byte> segment = img.Copy(new System.Drawing.Rectangle(startX, startY, digitWidth, digitHeight));
+                        segmentedDigits.Add(segment);
                     }
+
+                    string signContent = IdentifySignContent(segmentedDigits);
+                    sign[4] = signContent;
+                    Console.WriteLine(sign[4]);
                 }
-
-                ConvertMatrixIntoCSV(propMatrix);
-
-                //List<string[]> detectedSigns = new List<string[]>();
-                //foreach (KeyValuePair<int, int> tag in tagsDict)
-                //{
-                //    string[] aux = new string[4];
-
-                //    for (x = 0; x < width; x++)
-                //    {
-                //        for (y = 0; y < height; y++)
-                //        {
-                //            if (propMatrix[x, y] == tag.Key)
-                //            {
-                //                if(aux[0].Length == 0 || Convert.ToInt32(aux[0]) > x)
-                //                {
-                //                    aux[0] = x.ToString();
-                //                }
-
-                //                if (aux[1].Length == 0 || Convert.ToInt32(aux[1]) < x)
-                //                {
-                //                    aux[1] = x.ToString();
-                //                }
-
-                //                if (aux[2].Length == 0 || Convert.ToInt32(aux[2]) > y)
-                //                {
-                //                    aux[2] = y.ToString();
-                //                }
-
-                //                if (aux[3].Length == 0 || Convert.ToInt32(aux[3]) < y)
-                //                {
-                //                    aux[3] = y.ToString();
-                //                }
-                //            }
-
-                //        }
-                //    }
-                //}
-
-                //foreach (string[] sign in detectedSigns)
-                //{
-                //    Console.WriteLine(sign);
-                //}
             }
         }
     }
