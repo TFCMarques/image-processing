@@ -1902,8 +1902,8 @@ namespace SS_OpenCV
             int height = matrix.GetLength(1);
             int min;
             int current;
-            bool lrtdProp = false;
-            bool rldtProp = false;
+            bool restart = false;
+            bool reverse = false;
 
             for (int x = 0; x < width; x++)
             {
@@ -2036,13 +2036,13 @@ namespace SS_OpenCV
                         if (min < current)
                         {
                             matrix[x, y] = min;
-                            lrtdProp = true;
+                            reverse = true;
                         }
                     }
                 }
             }
                     
-            if (lrtdProp)
+            if (reverse)
             {
                 for (int x = width - 1; x >= 0; x--)
                 {
@@ -2175,14 +2175,14 @@ namespace SS_OpenCV
                             if (min < current)
                             {
                                 matrix[x, y] = min;
-                                rldtProp = true;
+                                restart = true;
                             }
                         }
                     }
                 }
             }
 
-            if (rldtProp)
+            if (restart)
             {
                 ConnectedComponentsAlgorithm(matrix);
             }
@@ -2190,7 +2190,7 @@ namespace SS_OpenCV
             return matrix;
         }
 
-        public static Dictionary<int, int> RemoveNoiseTags(int[,] matrix)
+        public static Dictionary<int, int> RemoveNoiseTags(int[,] matrix, double noiseThreshold)
         {
             int width = matrix.GetLength(0);
             int height = matrix.GetLength(1);
@@ -2225,7 +2225,7 @@ namespace SS_OpenCV
             {
                 double percentage = ((double)tag.Value / (double)maxTag.Value) * 100;
 
-                if (percentage <= 50.0)
+                if (percentage <= noiseThreshold)
                 {
                     for (int x = 0; x < width; x++)
                     {
@@ -2383,7 +2383,7 @@ namespace SS_OpenCV
                 int[,] propMatrix = ConnectedComponentsAlgorithm(tagMatrix);
                 //ConvertMatrixIntoCSV(propMatrix);
 
-                Dictionary<int, int> tagsDict = RemoveNoiseTags(propMatrix);
+                Dictionary<int, int> tagsDict = RemoveNoiseTags(propMatrix, 20.0);
 
                 //ConvertMatrixIntoCSV(propMatrix);
 
@@ -2458,38 +2458,38 @@ namespace SS_OpenCV
                                     0 <= saturation && saturation <= 100 &&
                                     0 <= value && value <= 30)
                                 {
-                                    dataPtrD[0] = 0;
-                                    dataPtrD[1] = 0;
-                                    dataPtrD[2] = 0;
+                                    //dataPtrD[0] = 0;
+                                    //dataPtrD[1] = 0;
+                                    //dataPtrD[2] = 0;
                                     digitsMatrix[x, y] = currentTag;
                                 } else
                                 {
-                                    dataPtrD[0] = 255;
-                                    dataPtrD[1] = 255;
-                                    dataPtrD[2] = 255;
+                                    //dataPtrD[0] = 255;
+                                    //dataPtrD[1] = 255;
+                                    //dataPtrD[2] = 255;
                                     digitsMatrix[x, y] = 0;
                                 }
 
                                 currentTag++;
                             }
-                            //if (y == yM || y == ym)
-                            //{
-                            //    if (xm < x && x < xM)
-                            //    {
-                            //        dataPtrD[0] = 0;
-                            //        dataPtrD[1] = 0;
-                            //        dataPtrD[2] = (byte)255;
-                            //    }
-                            //}
-                            //else if (x == xM || x == xm)
-                            //{
-                            //    if (ym < y && y < yM)
-                            //    {
-                            //        dataPtrD[0] = 0;
-                            //        dataPtrD[1] = 0;
-                            //        dataPtrD[2] = (byte)255;
-                            //    }
-                            //}
+                            if (y == yM || y == ym)
+                            {
+                                if (xm <= x && x <= xM)
+                                {
+                                    dataPtrD[0] = 0;
+                                    dataPtrD[1] = 0;
+                                    dataPtrD[2] = (byte)255;
+                                }
+                            }
+                            else if (x == xM || x == xm)
+                            {
+                                if (ym <= y && y <= yM)
+                                {
+                                    dataPtrD[0] = 0;
+                                    dataPtrD[1] = 0;
+                                    dataPtrD[2] = (byte)255;
+                                }
+                            }
 
                             dataPtrD += nChan;
                             dataPtrO += nChan;
@@ -2500,9 +2500,9 @@ namespace SS_OpenCV
                     }
 
                     digitsMatrix = ConnectedComponentsAlgorithm(digitsMatrix);
-                    Dictionary<int, int> tagsDigitsDict = RemoveNoiseTags(digitsMatrix);
+                    Dictionary<int, int> tagsDigitsDict = RemoveNoiseTags(digitsMatrix, 70.0);
 
-                    // List<string[]> detectedDigits = new List<string[]>();
+                    List<string[]> detectedDigits = new List<string[]>();
                     List<Image<Bgr, byte>> segmentedDigits = new List<Image<Bgr, byte>>();
                     foreach (KeyValuePair<int, int> tag in tagsDigitsDict)
                     {
@@ -2538,7 +2538,7 @@ namespace SS_OpenCV
                             }
                         }
 
-                        // detectedDigits.Add(aux);
+                        detectedDigits.Add(aux);
 
                         int startX = Convert.ToInt32(aux[0]);
                         int startY = Convert.ToInt32(aux[2]);
@@ -2549,6 +2549,48 @@ namespace SS_OpenCV
 
                         Image<Bgr, byte> segment = img.Copy(new System.Drawing.Rectangle(startX, startY, digitWidth, digitHeight));
                         segmentedDigits.Add(segment);
+                    }
+
+                    foreach (string[] digit in detectedDigits)
+                    {
+                        dataPtrD = (byte*)mResult.imageData.ToPointer();
+                        dataPtrO = (byte*)mAux.imageData.ToPointer();
+
+                        xm = Convert.ToInt32(digit[0]);
+                        xM = Convert.ToInt32(digit[1]);
+                        ym = Convert.ToInt32(digit[2]);
+                        yM = Convert.ToInt32(digit[3]);
+
+                        for (y = 0; y < height; y++)
+                        {
+                            for (x = 0; x < width; x++)
+                            {
+                                if (y == yM || y == ym)
+                                {
+                                    if (xm <= x && x <= xM)
+                                    {
+                                        dataPtrD[0] = 0;
+                                        dataPtrD[1] = (byte)255;
+                                        dataPtrD[2] = 0;
+                                    }
+                                }
+                                else if (x == xM || x == xm)
+                                {
+                                    if (ym <= y && y <= yM)
+                                    {
+                                        dataPtrD[0] = 0;
+                                        dataPtrD[1] = (byte)255;
+                                        dataPtrD[2] = 0;
+                                    }
+                                }
+
+                                dataPtrD += nChan;
+                                dataPtrO += nChan;
+                            }
+
+                            dataPtrD += padding;
+                            dataPtrO += padding;
+                        }
                     }
 
                     string signContent = IdentifySignContent(segmentedDigits);
