@@ -2253,42 +2253,39 @@ namespace SS_OpenCV
             return tagsDict;
         }
 
-        public static int CheckImageBrigthnessLevel(Image<Bgr, byte> img)
+        public static int CheckBrigthnessLevel(Image<Bgr, byte> img, int startX, int endX, int startY, int endY)
         {
             unsafe
             {
-                int width = img.Width;
-                int height = img.Height;
                 MIplImage mAux = img.MIplImage;
+                byte* dataPtr = (byte*)mAux.imageData.ToPointer();
+
                 int nChan = mAux.nChannels; // number of channels - 3
                 int w = mAux.width;
                 int ws = mAux.widthStep;
                 int padding = ws - nChan * w;
                 int x, y;
 
+                int size = (endX - startX) * (endY - startY);
                 int blue, green, red;
                 int level = 0;
-                byte* dataPtr = (byte*)mAux.imageData.ToPointer();
 
                 if (nChan == 3)
                 {
-                    for (y = 0; y < height; y++)
+                    for (y = startY; y <= endY; y++)
                     {
-                        for (x = 0; x < width; x++)
+                        for (x = startX; x <= endX; x++)
                         {
-                            blue = dataPtr[0];
-                            green = dataPtr[1];
-                            red = dataPtr[2];
+                            blue = (byte)(dataPtr + y * ws + x * nChan)[0];
+                            green = (byte)(dataPtr + y * ws + x * nChan)[1];
+                            red = (byte)(dataPtr + y * ws + x * nChan)[2];
 
                             level += (byte)Math.Round(((int)blue + green + red) / 3.0);
-
-                            dataPtr += nChan;
                         }
-                        dataPtr += padding;
                     }
                 }
 
-                level /= (width * height);
+                level /= size;
                 return level;
             }
         }
@@ -2493,19 +2490,18 @@ namespace SS_OpenCV
                                 tagMatrix[x, y] = currentTag;
                                 currentTag++;
                             }
-                            else
-                            {
-                                tagMatrix[x, y] = 0;
-                            }
+                            else tagMatrix[x, y] = 0;
+
                             dataPtrO += nChan;
                         }
                         dataPtrO += padding;
                     }
                 }
+
                 int[,] propMatrix = ConnectedComponentsAlgorithm(tagMatrix);
                 //ConvertMatrixIntoCSV(propMatrix);
 
-                Dictionary<int, int> tagsDict = RemoveNoiseTags(propMatrix, 20.0);
+                Dictionary<int, int> tagsDict = RemoveNoiseTags(propMatrix, 10.0);
                 //ConvertMatrixIntoCSV(propMatrix);
 
                 List<string[]> detectedSigns = new List<string[]>();
@@ -2561,12 +2557,22 @@ namespace SS_OpenCV
                     if (CheckIfCircleSign(img, xm, xM, ym, yM))
                     {
                         // Capturing only the sign interior using percentages of size
-                        int innerXm = (int)(xm + 0.15 * (xM - xm));
-                        int innerXM = (int)(xM - 0.15 * (xM - xm));
-                        int innerYm = (int)(ym + 0.15 * (yM - ym));
-                        int innerYM = (int)(yM - 0.15 * (yM - ym));
+                        int innerXm = (int)(xm + 0.125 * (xM - xm));
+                        int innerXM = (int)(xM - 0.125 * (xM - xm));
+                        int innerYm = (int)(ym + 0.25 * (yM - ym));
+                        int innerYM = (int)(yM - 0.25 * (yM - ym));
 
-                        // DrawSquare(img, innerXm, innerXM, innerYm, innerYM);
+                        DrawSquare(img, innerXm, innerXM, innerYm, innerYM);
+
+                        int minValue = 0;
+                        int maxValue = 30;
+                        int brightness = CheckBrigthnessLevel(img, innerXm, innerXM, innerYm, innerYM);
+
+                        if (brightness > 180)
+                        {
+                            minValue = 20;
+                            maxValue = 60;
+                        }
 
                         currentTag = 1;
                         int[,] digitsMatrix = new int[width, height];
@@ -2586,8 +2592,12 @@ namespace SS_OpenCV
 
                                 if (0 <= hue && hue < 360 &&
                                     0 <= saturation && saturation <= 100 &&
-                                    0 <= value && value <= 30)
+                                    minValue <= value && value <= maxValue)
                                 {
+                                    (dataPtrD + y * ws + x * nChan)[0] = (byte)255;
+                                    (dataPtrD + y * ws + x * nChan)[1] = 0;
+                                    (dataPtrD + y * ws + x * nChan)[2] = 0;
+
                                     digitsMatrix[x, y] = currentTag;
                                 }
                                 else digitsMatrix[x, y] = 0;
@@ -2597,6 +2607,7 @@ namespace SS_OpenCV
                         }
 
                         digitsMatrix = ConnectedComponentsAlgorithm(digitsMatrix);
+
                         Dictionary<int, int> tagsDigitsDict = RemoveNoiseTags(digitsMatrix, 45);
 
                         List<Image<Bgr, byte>> segmentedDigits = new List<Image<Bgr, byte>>();
@@ -2641,7 +2652,7 @@ namespace SS_OpenCV
                             int digitWidth = endX - startX;
                             int digitHeight = endY - startY;
 
-                            // DrawSquare(img, startX, endX, startY, endY);
+                            DrawSquare(img, startX, endX, startY, endY);
                             Image<Bgr, byte> segment = img.Copy(new System.Drawing.Rectangle(startX, startY, digitWidth, digitHeight));
                             segmentedDigits.Add(segment);
                         }
@@ -2649,14 +2660,13 @@ namespace SS_OpenCV
                         string signContent = IdentifySignContent(segmentedDigits);
                         sign[0] = signContent;
 
-                        // add to limit table if contains zero
                         if (sign[0].Contains("0"))
                         {
                             limitSign.Add(sign);
                         }
-                        // add to proibition table if not
                         else
                         {
+                            sign[0] = "-1";
                             prohibitionSign.Add(sign);
                         }
                     }
