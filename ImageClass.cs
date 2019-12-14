@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Emgu.CV.Structure;
 using Emgu.CV;
 using System.IO;
@@ -2214,37 +2213,169 @@ namespace SS_OpenCV
                 }
             }
 
-            KeyValuePair<int, int> maxTag = tagsDict.First();
-            foreach (KeyValuePair<int, int> tag in tagsDict)
+            try
             {
-                if (tag.Value > maxTag.Value) maxTag = tag;
-            }
-
-            List<int> keysToRemove = new List<int>();
-            foreach (KeyValuePair<int, int> tag in tagsDict)
-            {
-                double percentage = ((double)tag.Value / (double)maxTag.Value) * 100;
-
-                if (percentage <= noiseThreshold)
+                KeyValuePair<int, int> maxTag = tagsDict.First();
+                foreach (KeyValuePair<int, int> tag in tagsDict)
                 {
-                    for (int x = 0; x < width; x++)
+                    if (tag.Value > maxTag.Value) maxTag = tag;
+                }
+
+                List<int> keysToRemove = new List<int>();
+                foreach (KeyValuePair<int, int> tag in tagsDict)
+                {
+                    double percentage = ((double)tag.Value / (double)maxTag.Value) * 100;
+
+                    if (percentage <= noiseThreshold)
                     {
-                        for (int y = 0; y < height; y++)
+                        for (int x = 0; x < width; x++)
                         {
-                            if (matrix[x, y] == tag.Key)
-                                matrix[x, y] = 0;
+                            for (int y = 0; y < height; y++)
+                            {
+                                if (matrix[x, y] == tag.Key)
+                                    matrix[x, y] = 0;
+                            }
                         }
+                        keysToRemove.Add(tag.Key);
                     }
-                    keysToRemove.Add(tag.Key);
+                }
+
+                foreach (int key in keysToRemove)
+                {
+                    tagsDict.Remove(key);
                 }
             }
-
-            foreach (int key in keysToRemove)
+            catch (Exception e)
             {
-                tagsDict.Remove(key);
+                Console.WriteLine("Raised exception: " + e);
             }
 
             return tagsDict;
+        }
+
+        public static int CheckImageBrigthnessLevel(Image<Bgr, byte> img)
+        {
+            unsafe
+            {
+                int width = img.Width;
+                int height = img.Height;
+                MIplImage mAux = img.MIplImage;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                int blue, green, red;
+                int level = 0;
+                byte* dataPtr = (byte*)mAux.imageData.ToPointer();
+
+                if (nChan == 3)
+                {
+                    for (y = 0; y < height; y++)
+                    {
+                        for (x = 0; x < width; x++)
+                        {
+                            blue = dataPtr[0];
+                            green = dataPtr[1];
+                            red = dataPtr[2];
+
+                            level += (byte)Math.Round(((int)blue + green + red) / 3.0);
+
+                            dataPtr += nChan;
+                        }
+                        dataPtr += padding;
+                    }
+                }
+
+                level /= (width * height);
+                return level;
+            }
+        }
+
+        public static void DrawSquare(Image<Bgr, byte> img, int startX, int endX, int startY, int endY)
+        {
+            unsafe
+            {
+                int width = img.Width;
+                int height = img.Height;
+                MIplImage mAux = img.MIplImage;
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+                int x, y;
+
+                byte* dataPtr = (byte*)mAux.imageData.ToPointer();
+
+                for (x = startX; x <= endX; x++)
+                {
+                    (dataPtr + startY * ws + x * nChan)[0] = 0;
+                    (dataPtr + startY * ws + x * nChan)[1] = 0;
+                    (dataPtr + startY * ws + x * nChan)[2] = 255;
+
+                    (dataPtr + endY * ws + x * nChan)[0] = 0;
+                    (dataPtr + endY * ws + x * nChan)[1] = 0;
+                    (dataPtr + endY * ws + x * nChan)[2] = 255;
+                }
+
+                for (y = startY; y <= endY; y++)
+                {
+                    (dataPtr + y * ws + startX * nChan)[0] = 0;
+                    (dataPtr + y * ws + startX * nChan)[1] = 0;
+                    (dataPtr + y * ws + startX * nChan)[2] = 255;
+
+                    (dataPtr + y * ws + endX * nChan)[0] = 0;
+                    (dataPtr + y * ws + endX * nChan)[1] = 0;
+                    (dataPtr + y * ws + endX * nChan)[2] = 255;
+                }
+            }
+        }
+
+        public static bool CheckIfCircleSign(Image<Bgr, byte> img, int startX, int endX, int startY, int endY)
+        {
+            unsafe
+            {
+                MIplImage mAux = img.MIplImage;
+                byte* dataPtrO = (byte*)mAux.imageData.ToPointer();
+
+                int nChan = mAux.nChannels; // number of channels - 3
+                int w = mAux.width;
+                int ws = mAux.widthStep;
+                int padding = ws - nChan * w;
+
+                int blue, green, red;
+
+                int x, y;
+                int topRedPixels = 0;
+                int bottomRedPixels = 0;
+                int halfHeight = (endY - startY) / 2;
+
+                for (y = startY; y <= endY; y++)
+                {
+                    for (x = startX; x <= endX; x++)
+                    {
+                        blue = (byte)(dataPtrO + y * ws + x * nChan)[0];
+                        green = (byte)(dataPtrO + y * ws + x * nChan)[1];
+                        red = (byte)(dataPtrO + y * ws + x * nChan)[2];
+
+                        double[] hsvArray = ConvertRGBtoHSV(red, green, blue);
+                        double hue = hsvArray[0];
+                        double saturation = hsvArray[1];
+                        double value = hsvArray[2];
+
+                        if ((0 <= hue && hue <= 10 || 330 <= hue && hue < 360) &&
+                            30 <= saturation && saturation <= 100 &&
+                            30 <= value && value <= 100)
+                        {
+                            if(y <= startY + halfHeight) topRedPixels++;
+                            if(y > startY + halfHeight) bottomRedPixels++;
+                        }
+                    }
+                }
+
+                return topRedPixels < (0.8 * bottomRedPixels) || bottomRedPixels < (0.8 * topRedPixels) ? false : true;
+            }
         }
 
         public static string IdentifySignContent(List<Image<Bgr, byte>> segments)
@@ -2313,10 +2444,14 @@ namespace SS_OpenCV
             }
         }
 
-        public static void Signs(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy/*, out List<string[]> limitSign, out List<string[]> warningSign, out List<string[]> prohibitionSign, int level*/)
+        public static Image<Bgr, byte> Signs(Image<Bgr, byte> img, Image<Bgr, byte> imgCopy, out List<string[]> limitSign, out List<string[]> warningSign, out List<string[]> prohibitionSign, int level)
         {
             unsafe
             {
+                limitSign = new List<string[]>();
+                warningSign = new List<string[]>();
+                prohibitionSign = new List<string[]>();
+
                 MIplImage mResult = img.MIplImage;
                 MIplImage mAux = imgCopy.MIplImage;
 
@@ -2351,32 +2486,19 @@ namespace SS_OpenCV
                             double saturation = hsvArray[1];
                             double value = hsvArray[2];
 
-                            // red detection
-                            if ((0 <= hue && hue <= 20 || 330 <= hue && hue < 360) &&
+                            if ((0 <= hue && hue <= 10 || 330 <= hue && hue < 360) &&
                                 30 <= saturation && saturation <= 100 &&
                                 30 <= value && value <= 100)
                             {
-                                //dataPtrD[0] = 0;
-                                //dataPtrD[1] = 0;
-                                //dataPtrD[2] = 0;
-
                                 tagMatrix[x, y] = currentTag;
                                 currentTag++;
                             }
                             else
                             {
-                                //dataPtrD[0] = (byte)255;
-                                //dataPtrD[1] = (byte)255;
-                                //dataPtrD[2] = (byte)255;
-
                                 tagMatrix[x, y] = 0;
                             }
-
-                            //dataPtrD += nChan;
                             dataPtrO += nChan;
                         }
-
-                        //dataPtrD += padding;
                         dataPtrO += padding;
                     }
                 }
@@ -2384,14 +2506,13 @@ namespace SS_OpenCV
                 //ConvertMatrixIntoCSV(propMatrix);
 
                 Dictionary<int, int> tagsDict = RemoveNoiseTags(propMatrix, 20.0);
-
                 //ConvertMatrixIntoCSV(propMatrix);
 
                 List<string[]> detectedSigns = new List<string[]>();
                 foreach (KeyValuePair<int, int> tag in tagsDict)
                 {
                     string[] aux = new string[5];
-                    aux[4] = "-1";
+                    aux[0] = "-1";
 
                     for (x = 0; x < width; x++)
                     {
@@ -2399,24 +2520,24 @@ namespace SS_OpenCV
                         {
                             if (propMatrix[x, y] == tag.Key)
                             {
-                                if (aux[0] == null || Convert.ToInt32(aux[0]) > x)
-                                {
-                                    aux[0] = x.ToString();
-                                }
-
-                                if (aux[1] == null || Convert.ToInt32(aux[1]) < x)
+                                if (aux[1] == null || Convert.ToInt32(aux[1]) > x)
                                 {
                                     aux[1] = x.ToString();
                                 }
 
-                                if (aux[2] == null || Convert.ToInt32(aux[2]) > y)
+                                if (aux[3] == null || Convert.ToInt32(aux[3]) < x)
                                 {
-                                    aux[2] = y.ToString();
+                                    aux[3] = x.ToString();
                                 }
 
-                                if (aux[3] == null || Convert.ToInt32(aux[3]) < y)
+                                if (aux[4] == null || Convert.ToInt32(aux[4]) > y)
                                 {
-                                    aux[3] = y.ToString();
+                                    aux[4] = y.ToString();
+                                }
+
+                                if (aux[2] == null || Convert.ToInt32(aux[2]) < y)
+                                {
+                                    aux[2] = y.ToString();
                                 }
                             }
 
@@ -2428,26 +2549,35 @@ namespace SS_OpenCV
 
                 foreach (string[] sign in detectedSigns)
                 {
-                    dataPtrD = (byte*)mResult.imageData.ToPointer();
                     dataPtrO = (byte*)mAux.imageData.ToPointer();
 
-                    int xm = Convert.ToInt32(sign[0]);
-                    int xM = Convert.ToInt32(sign[1]);
-                    int ym = Convert.ToInt32(sign[2]);
-                    int yM = Convert.ToInt32(sign[3]);
+                    int xm = Convert.ToInt32(sign[1]);
+                    int xM = Convert.ToInt32(sign[3]);
+                    int ym = Convert.ToInt32(sign[4]);
+                    int yM = Convert.ToInt32(sign[2]);
+                    DrawSquare(img, xm, xM, ym, yM);
 
-                    currentTag = 1;
-                    int[,] digitsMatrix = new int[width, height];
-
-                    for (y = 0; y < height; y++)
+                    // Identify shape of sign here, to avoid extra processing, speeding up the program
+                    if (CheckIfCircleSign(img, xm, xM, ym, yM))
                     {
-                        for (x = 0; x < width; x++)
+                        // Capturing only the sign interior using percentages of size
+                        int innerXm = (int)(xm + 0.15 * (xM - xm));
+                        int innerXM = (int)(xM - 0.15 * (xM - xm));
+                        int innerYm = (int)(ym + 0.15 * (yM - ym));
+                        int innerYM = (int)(yM - 0.15 * (yM - ym));
+
+                        // DrawSquare(img, innerXm, innerXM, innerYm, innerYM);
+
+                        currentTag = 1;
+                        int[,] digitsMatrix = new int[width, height];
+
+                        for (y = innerYm; y <= innerYM; y++)
                         {
-                            if(xm <= x && x <= xM && ym <= y && y <= yM)
+                            for (x = innerXm; x <= innerXM; x++)
                             {
-                                blue = (int)dataPtrO[0];
-                                green = (int)dataPtrO[1];
-                                red = (int)dataPtrO[2];
+                                blue = (byte)(dataPtrO + y * ws + x * nChan)[0];
+                                green = (byte)(dataPtrO + y * ws + x * nChan)[1];
+                                red = (byte)(dataPtrO + y * ws + x * nChan)[2];
 
                                 double[] hsvArray = ConvertRGBtoHSV(red, green, blue);
                                 double hue = hsvArray[0];
@@ -2458,145 +2588,87 @@ namespace SS_OpenCV
                                     0 <= saturation && saturation <= 100 &&
                                     0 <= value && value <= 30)
                                 {
-                                    //dataPtrD[0] = 0;
-                                    //dataPtrD[1] = 0;
-                                    //dataPtrD[2] = 0;
                                     digitsMatrix[x, y] = currentTag;
-                                } else
-                                {
-                                    //dataPtrD[0] = 255;
-                                    //dataPtrD[1] = 255;
-                                    //dataPtrD[2] = 255;
-                                    digitsMatrix[x, y] = 0;
                                 }
+                                else digitsMatrix[x, y] = 0;
 
                                 currentTag++;
                             }
-                            if (y == yM || y == ym)
-                            {
-                                if (xm <= x && x <= xM)
-                                {
-                                    dataPtrD[0] = 0;
-                                    dataPtrD[1] = 0;
-                                    dataPtrD[2] = (byte)255;
-                                }
-                            }
-                            else if (x == xM || x == xm)
-                            {
-                                if (ym <= y && y <= yM)
-                                {
-                                    dataPtrD[0] = 0;
-                                    dataPtrD[1] = 0;
-                                    dataPtrD[2] = (byte)255;
-                                }
-                            }
-
-                            dataPtrD += nChan;
-                            dataPtrO += nChan;
                         }
 
-                        dataPtrD += padding;
-                        dataPtrO += padding;
-                    }
+                        digitsMatrix = ConnectedComponentsAlgorithm(digitsMatrix);
+                        Dictionary<int, int> tagsDigitsDict = RemoveNoiseTags(digitsMatrix, 45);
 
-                    digitsMatrix = ConnectedComponentsAlgorithm(digitsMatrix);
-                    Dictionary<int, int> tagsDigitsDict = RemoveNoiseTags(digitsMatrix, 70.0);
-
-                    List<string[]> detectedDigits = new List<string[]>();
-                    List<Image<Bgr, byte>> segmentedDigits = new List<Image<Bgr, byte>>();
-                    foreach (KeyValuePair<int, int> tag in tagsDigitsDict)
-                    {
-                        string[] aux = new string[4];
-
-                        for (x = 0; x < width; x++)
+                        List<Image<Bgr, byte>> segmentedDigits = new List<Image<Bgr, byte>>();
+                        foreach (KeyValuePair<int, int> tag in tagsDigitsDict)
                         {
-                            for (y = 0; y < height; y++)
-                            {
-                                if (digitsMatrix[x, y] == tag.Key)
-                                {
-                                    if (aux[0] == null || Convert.ToInt32(aux[0]) > x)
-                                    {
-                                        aux[0] = x.ToString();
-                                    }
+                            string[] aux = new string[4];
 
-                                    if (aux[1] == null || Convert.ToInt32(aux[1]) < x)
-                                    {
-                                        aux[1] = x.ToString();
-                                    }
-
-                                    if (aux[2] == null || Convert.ToInt32(aux[2]) > y)
-                                    {
-                                        aux[2] = y.ToString();
-                                    }
-
-                                    if (aux[3] == null || Convert.ToInt32(aux[3]) < y)
-                                    {
-                                        aux[3] = y.ToString();
-                                    }
-                                }
-
-                            }
-                        }
-
-                        detectedDigits.Add(aux);
-
-                        int startX = Convert.ToInt32(aux[0]);
-                        int startY = Convert.ToInt32(aux[2]);
-                        int endX = Convert.ToInt32(aux[1]);
-                        int endY = Convert.ToInt32(aux[3]);
-                        int digitWidth = endX - startX;
-                        int digitHeight = endY - startY;
-
-                        Image<Bgr, byte> segment = img.Copy(new System.Drawing.Rectangle(startX, startY, digitWidth, digitHeight));
-                        segmentedDigits.Add(segment);
-                    }
-
-                    foreach (string[] digit in detectedDigits)
-                    {
-                        dataPtrD = (byte*)mResult.imageData.ToPointer();
-                        dataPtrO = (byte*)mAux.imageData.ToPointer();
-
-                        xm = Convert.ToInt32(digit[0]);
-                        xM = Convert.ToInt32(digit[1]);
-                        ym = Convert.ToInt32(digit[2]);
-                        yM = Convert.ToInt32(digit[3]);
-
-                        for (y = 0; y < height; y++)
-                        {
                             for (x = 0; x < width; x++)
                             {
-                                if (y == yM || y == ym)
+                                for (y = 0; y < height; y++)
                                 {
-                                    if (xm <= x && x <= xM)
+                                    if (digitsMatrix[x, y] == tag.Key)
                                     {
-                                        dataPtrD[0] = 0;
-                                        dataPtrD[1] = (byte)255;
-                                        dataPtrD[2] = 0;
-                                    }
-                                }
-                                else if (x == xM || x == xm)
-                                {
-                                    if (ym <= y && y <= yM)
-                                    {
-                                        dataPtrD[0] = 0;
-                                        dataPtrD[1] = (byte)255;
-                                        dataPtrD[2] = 0;
-                                    }
-                                }
+                                        if (aux[0] == null || Convert.ToInt32(aux[0]) > x)
+                                        {
+                                            aux[0] = x.ToString();
+                                        }
 
-                                dataPtrD += nChan;
-                                dataPtrO += nChan;
+                                        if (aux[1] == null || Convert.ToInt32(aux[1]) < x)
+                                        {
+                                            aux[1] = x.ToString();
+                                        }
+
+                                        if (aux[2] == null || Convert.ToInt32(aux[2]) > y)
+                                        {
+                                            aux[2] = y.ToString();
+                                        }
+
+                                        if (aux[3] == null || Convert.ToInt32(aux[3]) < y)
+                                        {
+                                            aux[3] = y.ToString();
+                                        }
+                                    }
+
+                                }
                             }
 
-                            dataPtrD += padding;
-                            dataPtrO += padding;
+                            int startX = Convert.ToInt32(aux[0]);
+                            int startY = Convert.ToInt32(aux[2]);
+                            int endX = Convert.ToInt32(aux[1]);
+                            int endY = Convert.ToInt32(aux[3]);
+                            int digitWidth = endX - startX;
+                            int digitHeight = endY - startY;
+
+                            // DrawSquare(img, startX, endX, startY, endY);
+                            Image<Bgr, byte> segment = img.Copy(new System.Drawing.Rectangle(startX, startY, digitWidth, digitHeight));
+                            segmentedDigits.Add(segment);
+                        }
+
+                        string signContent = IdentifySignContent(segmentedDigits);
+                        sign[0] = signContent;
+
+                        // add to limit table if contains zero
+                        if (sign[0].Contains("0"))
+                        {
+                            limitSign.Add(sign);
+                        }
+                        // add to proibition table if not
+                        else
+                        {
+                            prohibitionSign.Add(sign);
                         }
                     }
+                    else warningSign.Add(sign);
 
-                    string signContent = IdentifySignContent(segmentedDigits);
-                    sign[4] = signContent;
+                    Console.WriteLine(sign[0]);
+                    Console.WriteLine(sign[1]);
+                    Console.WriteLine(sign[2]);
+                    Console.WriteLine(sign[3]);
                     Console.WriteLine(sign[4]);
                 }
+                return img;
             }
         }
     }

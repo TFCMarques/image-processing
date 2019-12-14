@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Emgu.CV;
 using Emgu.CV.Structure;
@@ -306,8 +307,11 @@ namespace SS_OpenCV
 
             //copy Undo Image
             imgUndo = img.Copy();
+            List<string[]> limitSign = new List<string[]>();
+            List<string[]> warningSign = new List<string[]>();
+            List<string[]> prohibitionSign = new List<string[]>();
 
-            ImageClass.Signs(img, imgUndo);
+            ImageClass.Signs(img, imgUndo, out limitSign, out warningSign, out prohibitionSign, 0);
 
             ImageViewer.Image = img.Bitmap;
             ImageViewer.Refresh(); // refresh image on the screen
