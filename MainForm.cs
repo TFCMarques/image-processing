@@ -315,6 +315,74 @@ namespace SS_OpenCV
 
             ImageViewer.Image = img.Bitmap;
             ImageViewer.Refresh(); // refresh image on the screen
+            SignsForm signForm = new SignsForm(limitSign, warningSign, prohibitionSign);
+            signForm.ShowDialog();
+
+            Cursor = Cursors.Default; // normal cursor 
+        }
+
+        private void translationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (img == null)
+                return;
+
+            Cursor = Cursors.WaitCursor; // clock cursor 
+            InputBox dxForm = new InputBox("dx?");
+            dxForm.ShowDialog();
+            int dx = Convert.ToInt32(dxForm.ValueTextBox.Text);
+
+            InputBox dyForm = new InputBox("dy?");
+            dxForm.ShowDialog();
+            int dy = Convert.ToInt32(dyForm.ValueTextBox.Text);
+
+            //copy Undo Image
+            imgUndo = img.Copy();
+            ImageClass.Translation(img, imgUndo, dx, dy);
+
+            ImageViewer.Image = img.Bitmap;
+            ImageViewer.Refresh(); // refresh image on the screen
+
+            Cursor = Cursors.Default; // normal cursor 
+        }
+
+        private void rotationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (img == null)
+                return;
+
+            Cursor = Cursors.WaitCursor; // clock cursor 
+
+            InputBox angleForm = new InputBox("Angle?");
+            angleForm.ShowDialog();
+            float angle = (float)Convert.ToDecimal(angleForm.ValueTextBox.Text);
+
+            //copy Undo Image
+            imgUndo = img.Copy();
+            ImageClass.Rotation(img, imgUndo, angle);
+
+            ImageViewer.Image = img.Bitmap;
+            ImageViewer.Refresh(); // refresh image on the screen
+
+            Cursor = Cursors.Default; // normal cursor 
+        }
+
+        private void zoomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (img == null)
+                return;
+
+            Cursor = Cursors.WaitCursor; // clock cursor 
+
+            InputBox scaleForm = new InputBox("Scale?");
+            scaleForm.ShowDialog();
+            float scaleFactor = (float)Convert.ToDecimal(scaleForm.ValueTextBox.Text);
+
+            //copy Undo Image
+            imgUndo = img.Copy();
+            ImageClass.Scale(img, imgUndo, scaleFactor);
+
+            ImageViewer.Image = img.Bitmap;
+            ImageViewer.Refresh(); // refresh image on the screen
 
             Cursor = Cursors.Default; // normal cursor 
         }

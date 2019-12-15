@@ -166,3 +166,4 @@ D:\FCT_MIEEC\Mestrado\4º Ano\SS\Prática\SS_OpenCV_Base\SS_OpenCV\obj\Debug\SS_
 D:\FCT_MIEEC\Mestrado\4º Ano\SS\Prática\SS_OpenCV_Base\SS_OpenCV\obj\Debug\SS_OpenCV.csprojAssemblyReference.cache
 D:\FCT_MIEEC\Mestrado\4º Ano\SS\Prática\SS_OpenCV_Base\SS_OpenCV\obj\Debug\SS_OpenCV.WeightForm.resources
 D:\FCT_MIEEC\Mestrado\4º Ano\SS\Prática\SS_OpenCV_Base\SS_OpenCV\obj\Debug\SS_OpenCV.Histogram.resources
+D:\FCT_MIEEC\Mestrado\4º Ano\SS\Prática\SS_OpenCV_Base\SS_OpenCV\obj\Debug\SS_OpenCV.SignsForm.resources

@@ -2305,26 +2305,58 @@ namespace SS_OpenCV
 
                 byte* dataPtr = (byte*)mAux.imageData.ToPointer();
 
-                for (x = startX; x <= endX; x++)
+                for (x = startX - 2; x <= endX + 2; x++)
                 {
-                    (dataPtr + startY * ws + x * nChan)[0] = 0;
-                    (dataPtr + startY * ws + x * nChan)[1] = 0;
-                    (dataPtr + startY * ws + x * nChan)[2] = 255;
+                    (dataPtr + startY * ws + x * nChan)[0] = 138;
+                    (dataPtr + startY * ws + x * nChan)[1] = 240;
+                    (dataPtr + startY * ws + x * nChan)[2] = 138;
 
-                    (dataPtr + endY * ws + x * nChan)[0] = 0;
-                    (dataPtr + endY * ws + x * nChan)[1] = 0;
-                    (dataPtr + endY * ws + x * nChan)[2] = 255;
+                    (dataPtr + (startY - 1) * ws + x * nChan)[0] = 138;
+                    (dataPtr + (startY - 1) * ws + x * nChan)[1] = 240;
+                    (dataPtr + (startY - 1) * ws + x * nChan)[2] = 138;
+
+                    (dataPtr + (startY - 2) * ws + x * nChan)[0] = 138;
+                    (dataPtr + (startY - 2) * ws + x * nChan)[1] = 240;
+                    (dataPtr + (startY - 2) * ws + x * nChan)[2] = 138;
+
+                    (dataPtr + endY * ws + x * nChan)[0] = 138;
+                    (dataPtr + endY * ws + x * nChan)[1] = 240;
+                    (dataPtr + endY * ws + x * nChan)[2] = 138;
+
+                    (dataPtr + (endY + 1) * ws + x * nChan)[0] = 138;
+                    (dataPtr + (endY + 1) * ws + x * nChan)[1] = 240;
+                    (dataPtr + (endY + 1) * ws + x * nChan)[2] = 138;
+
+                    (dataPtr + (endY + 2) * ws + x * nChan)[0] = 138;
+                    (dataPtr + (endY + 2) * ws + x * nChan)[1] = 240;
+                    (dataPtr + (endY + 2) * ws + x * nChan)[2] = 138;
                 }
 
-                for (y = startY; y <= endY; y++)
+                for (y = startY - 2; y <= endY + 2; y++)
                 {
-                    (dataPtr + y * ws + startX * nChan)[0] = 0;
-                    (dataPtr + y * ws + startX * nChan)[1] = 0;
-                    (dataPtr + y * ws + startX * nChan)[2] = 255;
+                    (dataPtr + y * ws + startX * nChan)[0] = 138;
+                    (dataPtr + y * ws + startX * nChan)[1] = 240;
+                    (dataPtr + y * ws + startX * nChan)[2] = 138;
 
-                    (dataPtr + y * ws + endX * nChan)[0] = 0;
-                    (dataPtr + y * ws + endX * nChan)[1] = 0;
-                    (dataPtr + y * ws + endX * nChan)[2] = 255;
+                    (dataPtr + y * ws + (startX - 1) * nChan)[0] = 138;
+                    (dataPtr + y * ws + (startX - 1) * nChan)[1] = 240;
+                    (dataPtr + y * ws + (startX - 1) * nChan)[2] = 138;
+
+                    (dataPtr + y * ws + (startX - 2) * nChan)[0] = 138;
+                    (dataPtr + y * ws + (startX - 2) * nChan)[1] = 240;
+                    (dataPtr + y * ws + (startX - 2) * nChan)[2] = 138;
+
+                    (dataPtr + y * ws + endX * nChan)[0] = 138;
+                    (dataPtr + y * ws + endX * nChan)[1] = 240;
+                    (dataPtr + y * ws + endX * nChan)[2] = 138;
+
+                    (dataPtr + y * ws + (endX + 1) * nChan)[0] = 138;
+                    (dataPtr + y * ws + (endX + 1) * nChan)[1] = 240;
+                    (dataPtr + y * ws + (endX + 1) * nChan)[2] = 138;
+
+                    (dataPtr + y * ws + (endX + 2) * nChan)[0] = 138;
+                    (dataPtr + y * ws + (endX + 2) * nChan)[1] = 240;
+                    (dataPtr + y * ws + (endX + 2) * nChan)[2] = 138;
                 }
             }
         }
@@ -2361,8 +2393,8 @@ namespace SS_OpenCV
                         double saturation = hsvArray[1];
                         double value = hsvArray[2];
 
-                        if ((0 <= hue && hue <= 10 || 330 <= hue && hue < 360) &&
-                            30 <= saturation && saturation <= 100 &&
+                        if ((0 <= hue && hue <= 10 || 340 <= hue && hue < 360) &&
+                            40 <= saturation && saturation <= 100 &&
                             30 <= value && value <= 100)
                         {
                             if(y <= startY + halfHeight) topRedPixels++;
@@ -2562,7 +2594,7 @@ namespace SS_OpenCV
                         int innerYm = (int)(ym + 0.25 * (yM - ym));
                         int innerYM = (int)(yM - 0.25 * (yM - ym));
 
-                        DrawSquare(img, innerXm, innerXM, innerYm, innerYM);
+                        //DrawSquare(img, innerXm, innerXM, innerYm, innerYM);
 
                         int minValue = 0;
                         int maxValue = 30;
@@ -2594,10 +2626,6 @@ namespace SS_OpenCV
                                     0 <= saturation && saturation <= 100 &&
                                     minValue <= value && value <= maxValue)
                                 {
-                                    (dataPtrD + y * ws + x * nChan)[0] = (byte)255;
-                                    (dataPtrD + y * ws + x * nChan)[1] = 0;
-                                    (dataPtrD + y * ws + x * nChan)[2] = 0;
-
                                     digitsMatrix[x, y] = currentTag;
                                 }
                                 else digitsMatrix[x, y] = 0;
@@ -2652,7 +2680,7 @@ namespace SS_OpenCV
                             int digitWidth = endX - startX;
                             int digitHeight = endY - startY;
 
-                            DrawSquare(img, startX, endX, startY, endY);
+                            // DrawSquare(img, startX, endX, startY, endY);
                             Image<Bgr, byte> segment = img.Copy(new System.Drawing.Rectangle(startX, startY, digitWidth, digitHeight));
                             segmentedDigits.Add(segment);
                         }
@@ -2672,11 +2700,11 @@ namespace SS_OpenCV
                     }
                     else warningSign.Add(sign);
 
-                    Console.WriteLine(sign[0]);
-                    Console.WriteLine(sign[1]);
-                    Console.WriteLine(sign[2]);
-                    Console.WriteLine(sign[3]);
-                    Console.WriteLine(sign[4]);
+                    //Console.WriteLine(sign[0]);
+                    //Console.WriteLine(sign[1]);
+                    //Console.WriteLine(sign[2]);
+                    //Console.WriteLine(sign[3]);
+                    //Console.WriteLine(sign[4]);
                 }
                 return img;
             }

@@ -67,7 +67,7 @@
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(99, 32);
             this.label3.TabIndex = 2;
-            this.label3.Text = "Autor1";
+            this.label3.Text = "David Jorge - Nº 37061";
             // 
             // label4
             // 
@@ -77,7 +77,7 @@
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(99, 32);
             this.label4.TabIndex = 2;
-            this.label4.Text = "Autor2";
+            this.label4.Text = "Tiago Marques - Nº 49879";
             // 
             // pictureBox1
             // 
@@ -99,7 +99,7 @@
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(99, 32);
             this.label5.TabIndex = 4;
-            this.label5.Text = "Autor3";
+            this.label5.Text = "Ricardo Walker - Nº 50351";
             // 
             // AuthorsForm
             // 
